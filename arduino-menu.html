@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPass - Sistema de Controle de Acesso Escolar</title>
+
+    <script>
+        (function() {
+            const dark = localStorage.getItem('darkMode') === 'true';
+            if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --green: #1a5c06;
+            --green-dark: #0f3a03;
+            --green-mid: #237a08;
+            --green-light: #4caf50;
+            --yellow: #f9d923;
+            --bg: #f5f7f5;
+            --bg2: #eaf3e8;
+            --text: #000000;
+            --text-muted: #000000;
+            --card-bg: #ffffff;
+            --border: rgba(26, 92, 6, 0.704);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+            --ifpi-green: #1d4903;
+            --ifpi-yellow: #ffeb3b;
+        }
+
+        [data-theme="dark"] {
+            --bg: #111a10;
+            --bg2: #182216;
+            --text: #d4e8d0;
+            --text-muted: #7aaa73;
+            --card-bg: #1e2d1c;
+            --border: rgba(76,175,80,0.15);
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+        
+        }
+
+        header {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 1.1rem 0;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        header nav { display: flex; justify-content: space-between; align-items: center; }
+
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo i { color: var(--yellow); }
+
+        nav ul { list-style: none; display: flex; align-items: center; gap: 0.2rem; }
+
+        nav ul li a {
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav ul li a:hover { color: var(--ifpi-yellow); }
+
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--ifpi-yellow);
+            transition: width 0.3s ease;
+        }
+
+        nav ul li a:hover::after { width: 100%; }
+
+        .nav-btn {
+            background: rgba(249,217,35,0.18) !important;
+            border: 1.5px solid rgba(249,217,35,0.45) !important;
+            color: var(--yellow) !important;
+            padding: 0.42rem 1.1rem !important;
+            border-radius: 8px !important;
+        }
+
+        .nav-btn:hover { background: var(--yellow) !important; color: var(--green-dark) !important; }
+        .nav-btn::after { display: none !important; }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-left: 0.5rem;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.22); }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            height: 580px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            margin-top: 62px;
+        }
+
+        .slides { position: absolute; inset: 0; z-index: 1; }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: slideAnim 18s infinite;
+        }
+
+        .slide:nth-child(1) { background-image: url(segurança.jpg); animation-delay: 0s; }
+        .slide:nth-child(2) { background-image: url(segurança2.jpg); animation-delay: 6s; }
+        .slide:nth-child(3) { background-image: url(segurança3.jpg); animation-delay: 12s; }
+
+        @keyframes slideAnim {
+            0%   { opacity: 0; }
+            5%   { opacity: 1; }
+            33%  { opacity: 1; }
+            38%  { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        .hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.52); z-index: 2; }
+
+        .slider-dots {
+            position: absolute;
+            bottom: 22px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 10px; z-index: 4;
+        }
+
+        .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            border: 2px solid rgba(249,217,35,0.4);
+            animation: dotAnim 18s infinite;
+        }
+
+        .dot:nth-child(1) { animation-delay: 0s; }
+        .dot:nth-child(2) { animation-delay: 6s; }
+        .dot:nth-child(3) { animation-delay: 12s; }
+
+        @keyframes dotAnim {
+            0%   { background: rgba(255,255,255,0.4); }
+            5%   { background: var(--yellow); border-color: var(--yellow); }
+            33%  { background: var(--yellow); border-color: var(--yellow); }
+            38%  { background: rgba(255,255,255,0.4); }
+            100% { background: rgba(255,255,255,0.4); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            color: white;
+            padding: 2.5rem 3rem;
+            border-radius: 14px;
+            border-left: 4px solid var(--yellow);
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            max-width: 870px;
+            animation: heroIn 0.9s ease 0.2s both;
+        }
+
+        @keyframes heroIn {
+            from { opacity: 0; transform: translateX(-28px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(249,217,35,0.16);
+            border: 1px solid rgba(249,217,35,0.38);
+            color: var(--yellow);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.9rem;
+            border-radius: 100px;
+            margin-bottom: 1.2rem;
+        }
+
+        .hero-badge .blink {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--yellow);
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .hero-content h1 {
+            font-family: 'Merriweather', serif;
+            font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero-content h1 span { color: var(--yellow); }
+        .hero-content p { font-size: 1.03rem; line-height: 1.75; opacity: 0.9; margin-bottom: 1.8rem; }
+
+        .btn {
+            display: inline-block;
+            padding: 0.72rem 1.7rem;
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.94rem;
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary { background: var(--yellow); color: var(--green-dark); }
+        .btn-primary:hover { background: #ffe04a; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,217,35,0.3); }
+
+        .btn-outline-white {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.45);
+            margin-left: 0.8rem;
+        }
+        .btn-outline-white:hover { border-color: white; background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+
+        section.s-light { background: var(--bg); padding: 5rem 0; }
+        section.s-alt   { background: var(--bg2); padding: 5rem 0; }
+        section.s-dark  { background: var(--green-dark); padding: 5rem 0; }
+
+        .section-head { text-align: center; margin-bottom: 3.5rem; }
+
+        .section-head .tag {
+            display: inline-block;
+            background: rgba(26,92,6,0.09);
+            color: var(--green);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.28rem 0.95rem;
+            border-radius: 100px;
+            margin-bottom: 0.8rem;
+            border: 1px solid rgba(26,92,6,0.18);
+        }
+
+        [data-theme="dark"] .section-head .tag {
+            background: rgba(76,175,80,0.1);
+            color: var(--green-light);
+            border-color: rgba(76,175,80,0.22);
+        }
+
+        .tag-white {
+            background: rgba(255,255,255,0.12) !important;
+            color: var(--yellow) !important;
+            border-color: rgba(249,217,35,0.3) !important;
+        }
+
+        .section-head h2 {
+            font-family: 'Merriweather', serif;
+            font-size: clamp(1.55rem, 2.8vw, 2.1rem);
+            color: var(--text);
+            line-height: 1.25;
+        }
+
+        .section-head h2.white { color: white; }
+        .section-head p { color: var(--text-muted); margin-top: 0.6rem; font-size: 0.97rem; }
+        .section-head p.white { color: rgba(255,255,255,0.72); }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        .card:hover { transform: translateY(-6px); box-shadow: 0 14px 34px rgba(26,92,6,0.13); }
+
+        .card-icon {
+            width: 52px; height: 52px;
+            border-radius: 12px;
+            background: rgba(26,92,6,0.08);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.35rem;
+            margin-bottom: 1.2rem;
+            color: var(--green);
+        }
+
+        [data-theme="dark"] .card-icon { background: rgba(76,175,80,0.1); color: var(--green-light); }
+
+        .card h3 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.05rem;
+            color: var(--text);
+            margin-bottom: 0.65rem;
+        }
+
+        .card p { color: var(--text-muted); font-size: 0.91rem; line-height: 1.7; }
+
+        /* Badges dos métodos de identificação */
+        .method-badges {
+            display: flex;
+            gap: 0.6rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .method-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(26,92,6,0.08);
+            color: var(--green);
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 0.28rem 0.75rem;
+            border-radius: 100px;
+            border: 1px solid rgba(26,92,6,0.18);
+        }
+
+        [data-theme="dark"] .method-badge {
+            background: rgba(76,175,80,0.1);
+            color: var(--green-light);
+            border-color: rgba(76,175,80,0.22);
+        }
+
+        /* STEPS */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0;
+            position: relative;
+        }
+
+        .steps-grid::before {
+            content: '';
+            position: absolute;
+            top: 38px;
+            left: 10%; right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--green-light), var(--yellow));
+            z-index: 0;
+        }
+
+        .step-item {
+            text-align: center;
+            padding: 0 1.5rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-num {
+            width: 76px; height: 76px;
+            border-radius: 50%;
+            background: var(--green);
+            color: white;
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.4rem;
+            box-shadow: 0 4px 18px rgba(26,92,6,0.3);
+            border: 4px solid var(--bg2);
+            transition: var(--transition);
+        }
+
+        .step-item:hover .step-num {
+            background: var(--yellow);
+            color: var(--green-dark);
+            transform: scale(1.1);
+        }
+
+        .step-item h4 {
+            font-family: 'Merriweather', serif;
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 0.55rem;
+        }
+
+        .step-item p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.65; }
+
+        /* SOBRE */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+
+        .about-text h2 {
+            font-family: 'Merriweather', serif;
+            font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+            margin-bottom: 1.2rem;
+            color: var(--text);
+        }
+
+        .about-text p { color: var(--text-muted); font-size: 0.97rem; line-height: 1.8; margin-bottom: 1.1rem; }
+        .about-text strong { color: var(--green); }
+        [data-theme="dark"] .about-text strong { color: var(--green-light); }
+
+        .about-highlights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: var(--shadow);
+        }
+
+        .highlight-item i { color: var(--green); font-size: 1.2rem; flex-shrink: 0; }
+        [data-theme="dark"] .highlight-item i { color: var(--green-light); }
+        .highlight-item span { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+
+        .about-visual-wrap { display: flex; flex-direction: column; gap: 1.2rem; }
+
+        /* IMAGEM DA EQUIPE CORRIGIDA - TOTALMENTE RESPONSIVA */
+        .about-img-card {
+            background: var(--card-bg);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            width: 100%;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+        
+        .about-img-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .about-img-card:hover img {
+            transform: scale(1.02);
+        }
+
+        .about-mini-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .about-mini {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .about-mini .num { font-family: 'Merriweather', serif; font-size: 1.5rem; color: var(--green); display: block; }
+        [data-theme="dark"] .about-mini .num { color: var(--green-light); }
+        .about-mini .txt { font-size: 0.78rem; color: var(--text-muted); }
+
+        /* TECNOLOGIAS */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .tech-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .tech-item:hover { transform: translateY(-4px); border-color: var(--green); }
+        .tech-item i { font-size: 2rem; color: var(--green); margin-bottom: 0.6rem; display: block; }
+        [data-theme="dark"] .tech-item i { color: var(--green-light); }
+        .tech-item span { font-size: 0.83rem; font-weight: 700; color: var(--text-muted); }
+
+        /* DEPOIMENTOS */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .testimonial-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .testimonial-card::before {
+            content: '\201C';
+            position: absolute;
+            top: -8px; left: 20px;
+            font-family: 'Merriweather', serif;
+            font-size: 5rem;
+            color: var(--yellow);
+            opacity: 0.4;
+            line-height: 1;
+        }
+
+        .testimonial-text {
+            color: rgba(255,255,255,0.82);
+            font-size: 0.93rem;
+            line-height: 1.75;
+            margin-bottom: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .testimonial-author { display: flex; align-items: center; gap: 0.9rem; }
+
+        .author-avatar {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            background: rgba(249,217,35,0.2);
+            border: 2px solid rgba(249,217,35,0.4);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--yellow);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .author-name { font-weight: 700; color: white; font-size: 0.92rem; }
+        .author-role { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        .testimonial-stars { color: var(--yellow); font-size: 0.8rem; margin-top: 0.2rem; letter-spacing: 2px; }
+
+        /* FAQ */
+        .faq-wrap { max-width: 780px; margin: 0 auto; }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 1.2rem 1.5rem;
+            text-align: left;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .faq-question:hover { color: var(--green); }
+        [data-theme="dark"] .faq-question:hover { color: var(--green-light); }
+        .faq-question i { transition: transform 0.3s ease; color: var(--green); }
+        [data-theme="dark"] .faq-question i { color: var(--green-light); }
+        .faq-item.open .faq-question i { transform: rotate(180deg); }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            padding: 0 1.5rem;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 200px;
+            padding: 0 1.5rem 1.3rem;
+        }
+
+        .faq-answer p { color: var(--text-muted); font-size: 0.91rem; line-height: 1.75; }
+
+        /* CONTATO */
+        .contact-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 3rem; align-items: start; }
+
+        .contact-info { padding: 2rem 0; }
+
+        .contact-info h3 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.3rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .contact-info p { color: var(--text-muted); font-size: 0.93rem; line-height: 1.75; margin-bottom: 2rem; }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .contact-item-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: rgba(26,92,6,0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--green);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .contact-item-icon { background: rgba(76,175,80,0.1); color: var(--green-light); }
+
+        .contact-item-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .contact-item-value { font-size: 0.94rem; font-weight: 700; color: var(--text); }
+
+        .contact-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group { margin-bottom: 1.35rem; }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.87rem;
+            margin-bottom: 0.42rem;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.72rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.94rem;
+            background: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(26,92,6,0.1);
+        }
+
+        [data-theme="dark"] .form-group input:focus,
+        [data-theme="dark"] .form-group textarea:focus {
+            border-color: var(--green-light);
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.13);
+        }
+
+        .form-group textarea { height: 130px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .btn-green { background: var(--green); color: white; }
+        .btn-green:hover {
+            background: var(--green-mid);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(26,92,6,0.22);
+        }
+
+        /* FOOTER */
+        footer { background: #0f3a03; color: #c8e6c9; padding: 3.5rem 0 1.5rem; }
+        [data-theme="dark"] footer { background: #070e06; }
+
+        .footer-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 3rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .footer-col h4 {
+            color: var(--green-light);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1.1rem;
+            padding-bottom: 0.6rem;
+            position: relative;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: 0;
+            width: 30px; height: 2px;
+            background: var(--yellow);
+            border-radius: 2px;
+        }
+
+        .footer-col p { font-size: 0.89rem; line-height: 1.75; color: #a5d6a7; }
+
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 0.58rem; }
+        .footer-links a {
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 0.89rem;
+            transition: var(--transition);
+        }
+        .footer-links a:hover { color: var(--yellow); padding-left: 6px; }
+
+        .contact-row { font-size: 0.87rem; margin-bottom: 0.52rem; color: #c8e6c9; }
+        .contact-row .lbl { color: var(--green-light); font-weight: 700; display: inline-block; width: 72px; }
+
+        .footer-social { display: flex; gap: 0.8rem; margin-top: 1rem; }
+        .social-btn {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .social-btn:hover { background: var(--yellow); color: var(--green-dark); }
+
+        footer hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin-bottom: 1.5rem; }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.82rem;
+            color: #81c784;
+        }
+
+        .footer-bottom ul { list-style: none; display: flex; gap: 1.5rem; }
+        .footer-bottom ul a { color: #81c784; text-decoration: none; transition: var(--transition); }
+        .footer-bottom ul a:hover { color: var(--yellow); }
+
+        /* SCROLL REVEAL */
+        .reveal {
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .about-grid { grid-template-columns: 1fr; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .steps-grid::before { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+
+            nav ul {
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                background: var(--green-dark);
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+
+            nav ul.open { max-height: 460px; padding: 0.5rem 0; }
+            nav ul li a { display: block; padding: 0.7rem 1.5rem; border-radius: 0; }
+            nav ul li a.nav-btn { margin: 0.5rem 1rem; border-radius: 8px; text-align: center; }
+
+            .hero { height: 460px; }
+            .hero-content { padding: 1.5rem; }
+            .about-highlights { grid-template-columns: 1fr; }
+            .about-mini-cards { grid-template-columns: 1fr 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+            .footer-bottom ul { justify-content: center; flex-wrap: wrap; }
+        }
+
+        @media (max-width: 480px) {
+            .hero { height: 510px; }
+            .btn-outline-white { margin-left: 0; margin-top: 0.7rem; display: inline-block; }
+            .about-mini-cards { grid-template-columns: 1fr; }
+            .hero-content { padding: 1.2rem; margin: 0 1rem; }
+            .hero-content .btn { display: block; width: 100%; text-align: center; margin: 0.5rem 0; }
+            .hero-content .btn-outline-white { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <nav class="container">
+            <a class="logo" href="#">
+                <i class="fas fa-id-card"></i>
+                SmartPass
+            </a>
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul id="navMenu">
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="#como-funciona">Como Funciona</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="login.html" class="nav-btn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                <li>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+        <div class="slides">
+            <div class="slide"></div>
+            <div class="slide"></div>
+            <div class="slide"></div>
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="slider-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="blink"></span>
+                    Sistema Ativo &middot; Tempo Real
+                </div>
+                <h1>Bem-vindo ao <span>SmartPass</span></h1>
+                <p>Um sistema destinado ao controle de acesso para alunos do IFPI - Campus Pedro II, com segurança, rastreabilidade e notificações automáticas para tranquilidade de toda a família.</p>
+                <a href="#servicos" class="btn btn-primary">Conheça o sistema</a>
+                <a href="#contato" class="btn btn-outline-white">Fale Conosco</a>
+            </div>
+        </div>
+    </section>
+
+    <main>
+        <!-- SERVIÇOS -->
+        <section class="s-light" id="servicos">
+            <div class="container">
+                <div class="section-head reveal">
+                    <div class="tag">Funcionalidades</div>
+                    <h2>Definição do sistema</h2>
+                    <p>Soluções modernas para instituições de ensino de todos os tamanhos.</p>
+                </div>
+                <div class="cards-grid">
+                    <div class="card reveal">
+                        <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3>Controle de Acesso Seguro</h3>
+                        <p>Registre com precisão quem entra e sai da escola em tempo real. Somente pessoas autorizadas têm permissão de acesso, garantindo a segurança de todos.</p>
+                    </div>
+
+                    <div class="card reveal">
+                        <div class="card-icon"><i class="fas fa-id-badge"></i></div>
+                        <h3>Múltiplas Formas de Identificação</h3>
+                        <p>O sistema suporta três métodos modernos de identificação. Cada escola escolhe o mais adequado à sua realidade, garantindo agilidade e segurança na portaria sem filas.</p>
+                        <div class="method-badges">
+                            <span class="method-badge"><i class="fas fa-fingerprint"></i> Biometria</span>
+                            <span class="method-badge"><i class="fas fa-wifi"></i> Cartão RFID</span>
+                        </div>
+                    </div>
+
+                    <div class="card reveal">
+                        <div class="card-icon"><i class="fas fa-bell"></i></div>
+                        <h3>Notificações para Responsáveis</h3>
+                        <p>Os pais recebem alertas automáticos no celular sempre que o aluno entra ou sai da escola, garantindo total tranquilidade e controle.</p>
+                    </div>
+                    <div class="card reveal">
+                        <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                        <h3>Relatórios Detalhados</h3>
+                        <p>Extraia relatórios de frequência, horários e irregularidades em poucos cliques. Dados exportáveis em PDF e planilhas para análise completa.</p>
+                    </div>
+                    <div class="card reveal">
+                        <div class="card-icon"><i class="fas fa-users-cog"></i></div>
+                        <h3>Gestão de Usuários</h3>
+                        <p>Cadastre alunos, professores e responsáveis com facilidade. Gerencie permissões, turmas e níveis de acesso de forma centralizada e intuitiva.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMO FUNCIONA -->
+        <section class="s-alt" id="como-funciona">
+            <div class="container">
+                <div class="section-head reveal">
+                    <div class="tag">Processo</div>
+                    <h2>Como Funciona?</h2>
+                    <p>Em apenas 4 passos simples, sua escola passa a ter controle total de acesso.</p>
+                </div>
+                <div class="steps-grid reveal">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <h4>Cadastro na Plataforma</h4>
+                        <p>A instituição realiza o cadastro dos alunos, funcionários e responsáveis no sistema com dados básicos e foto.</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <h4>Escolha do Método de Acesso</h4>
+                        <p>Cada aluno tem sua biometria cadastrada, recebe um cartão RFID — conforme o método adotado pela escola.</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <h4>Leitura na Portaria</h4>
+                        <p>Ao entrar ou sair, o aluno usa a biometria, aproxima o cartão RFID. O sistema registra o acesso em milissegundos.</p>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <h4>Notificação Automática</h4>
+                        <p>Os responsáveis recebem instantaneamente uma notificação no celular informando a entrada ou saída do aluno.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOBRE - COM IMAGEM RESPONSIVA -->
+        <section class="s-light" id="sobre">
+            <div class="container">
+                <div class="section-head reveal">
+                    <div class="tag">Quem Somos</div>
+                    <h2>Sobre o SmartPass</h2>
+                    <p>Conheça a equipe e a missão por trás do projeto.</p>
+                </div>
+                <div class="about-grid">
+                    <div class="about-text reveal">
+                        <h2>Tecnologia a serviço da educação</h2>
+                        <p>Somos uma equipe dedicada ao desenvolvimento de soluções educacionais inovadoras. O SmartPass nasceu da identificação de uma necessidade real: <strong>a falta de ferramentas acessíveis para registrar e monitorar a presença de alunos</strong> nas escolas.</p>
+                        <p>Nossa missão é oferecer segurança, praticidade e transparência para escolas, famílias e administradores, modernizando o ambiente educacional brasileiro de forma simples e eficaz.</p>
+
+                        <div class="about-highlights">
+                            <div class="highlight-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>100% Online</span>
+                            </div>
+                            <div class="highlight-item">
+                                <i class="fas fa-lock"></i>
+                                <span>Dados Protegidos (LGPD)</span>
+                            </div>
+                            <div class="highlight-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>Foco Educacional</span>
+                            </div>
+                        </div>
+
+                        <p><strong>Orientador responsável:</strong> Nathan Saraiva</p>
+                        <a href="#contato" class="btn btn-green" style="margin-top:1rem;">Entre em Contato</a>
+                    </div>
+
+                    <div class="about-visual-wrap reveal">
+                        <!-- IMAGEM DA EQUIPE CORRIGIDA - TOTALMENTE RESPONSIVA -->
+                        <div class="about-img-card">
+                            <img src="Devs.jpeg" alt="Equipe SmartPass" style="width:100%; height:auto; display:block;">
+                        </div>
+                        <div class="about-mini-cards">
+                            <div class="about-mini">
+                                <span class="num">2025</span>
+                                <span class="txt">Ano de fundação</span>
+                            </div>
+                            <div class="about-mini">
+                                <span class="num">5</span>
+                                <span class="txt">Devs na equipe</span>
+                            </div>
+                            <div class="about-mini">
+                                <span class="num">PI</span>
+                                <span class="txt">Piauí, Brasil</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="s-light" id="faq">
+            <div class="container">
+                <div class="section-head reveal">
+                    <div class="tag">Dúvidas</div>
+                    <h2>Perguntas Frequentes</h2>
+                    <p>Tire suas principais dúvidas sobre o SmartPass.</p>
+                </div>
+                <div class="faq-wrap reveal">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Quais métodos de identificação o sistema suporta?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>O SmartPass suporta três métodos: biometria (impressão digital), cartão RFID (crachá inteligente por aproximação).</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Os dados dos alunos estão seguros?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Totalmente. O SmartPass está em conformidade com a LGPD (Lei Geral de Proteção de Dados). Todos os dados são criptografados e armazenados com segurança. Apenas usuários autorizados têm acesso.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Como os responsáveis recebem as notificações?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>As notificações são enviadas por SMS e/ou e-mail no momento exato do registro de entrada ou saída do aluno. Em breve, também será disponibilizado um aplicativo móvel dedicado.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFaq(this)">
+                            Existe um período de teste gratuito?
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Sim! Oferecemos um período de demonstração gratuito de 30 dias para que a escola possa avaliar todas as funcionalidades sem nenhum compromisso. Entre em contato para solicitar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTATO -->
+        <section class="s-alt" id="contato">
+            <div class="container">
+                <div class="section-head reveal">
+                    <div class="tag">Contato</div>
+                    <h2>Entre em Contato</h2>
+                    <p>Tem alguma dúvida, problema ou sugestão? Nossa equipe está pronta para te atender.</p>
+                </div>
+
+                <div class="contact-grid reveal">
+                    <div class="contact-info">
+                        <h3>Fale com a equipe SmartPass</h3>
+                        <p>Estamos disponíveis para responder suas dúvidas, receber sugestões de melhoria ou ajudar sua escola a começar a usar o sistema.</p>
+
+                        <div class="contact-item">
+                            <div class="contact-item-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <div class="contact-item-label">Endereço</div>
+                                <div class="contact-item-value">Pedro II, Piauí — Brasil</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-item-icon"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <div class="contact-item-label">Telefone</div>
+                                <div class="contact-item-value">(89) 0000-0000</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-item-icon"><i class="fas fa-envelope"></i></div>
+                            <div>
+                                <div class="contact-item-label">E-mail</div>
+                                <div class="contact-item-value">contato@smartpass.edu.br</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-item-icon"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <div class="contact-item-label">Atendimento</div>
+                                <div class="contact-item-value">Seg – Sex, 07h às 18h</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-wrap">
+                        <form id="contactForm" onsubmit="handleSubmit(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="nome"><i class="fas fa-user" style="margin-right:6px;color:var(--green)"></i>Nome:</label>
+                                    <input type="text" id="nome" placeholder="Seu nome completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email"><i class="fas fa-envelope" style="margin-right:6px;color:var(--green)"></i>Email:</label>
+                                    <input type="email" id="email" placeholder="seu@email.com" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="telefone"><i class="fas fa-phone" style="margin-right:6px;color:var(--green)"></i>Telefone:</label>
+                                    <input type="tel" id="telefone" placeholder="(00) 00000-0000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="tipo"><i class="fas fa-tag" style="margin-right:6px;color:var(--green)"></i>Você é:</label>
+                                    <select id="tipo">
+                                        <option value="">Selecione...</option>
+                                        <option>Diretor(a)</option>
+                                        <option>Coordenador(a)</option>
+                                        <option>Professor(a)</option>
+                                        <option>Responsável</option>
+                                        <option>Aluno(a)</option>
+                                        <option>Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="assunto"><i class="fas fa-bookmark" style="margin-right:6px;color:var(--green)"></i>Assunto:</label>
+                                <input type="text" id="assunto" placeholder="Assunto da mensagem" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mensagem"><i class="fas fa-comment" style="margin-right:6px;color:var(--green)"></i>Mensagem:</label>
+                                <textarea id="mensagem" placeholder="Descreva sua mensagem com detalhes..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-green" style="width:100%;font-size:1rem;padding:0.85rem;">
+                                <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Enviar Mensagem
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>SmartPass</h4>
+                    <p>Sistema de controle de acesso escolar criado para promover segurança, modernização e tranquilidade para toda a comunidade escolar.</p>
+                    <div class="footer-social">
+                        <a class="social-btn" href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a class="social-btn" href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a class="social-btn" href="#" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a class="social-btn" href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Links Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="#inicio">Início</a></li>
+                        <li><a href="#servicos">Serviços</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#sobre">Sobre Nós</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#contato">Suporte</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contato</h4>
+                    <div class="contact-row"><span class="lbl">Endereço:</span> Pedro II, Piauí</div>
+                    <div class="contact-row"><span class="lbl">Telefone:</span> (89) 0000-0000</div>
+                    <div class="contact-row"><span class="lbl">E-mail:</span> contato@smartpass.edu.br</div>
+                    <div class="contact-row"><span class="lbl">Horário:</span> Seg–Sex, 07h–18h</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Instituição</h4>
+                    <p>Projeto desenvolvido no IFPI – Campus Pedro II, como solução tecnológica para o controle de acesso escolar.</p>
+                    <p style="margin-top:0.8rem;font-size:0.84rem;color:#81c784;">Projeto acadêmico com aplicação real.</p>
+                </div>
+            </div>
+            <hr>
+            <div class="footer-bottom">
+                <p>© 2025 SmartPass. Todos os direitos reservados.</p>
+                <ul>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="#">Acessibilidade</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('open');
+        }
+
+        document.querySelectorAll('#navMenu a').forEach(a => {
+            a.addEventListener('click', () => {
+                document.getElementById('navMenu').classList.remove('open');
+            });
+        });
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('darkMode', 'false');
+                document.getElementById('themeIcon').className = 'fas fa-moon';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('darkMode', 'true');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            }
+        }
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('visible'), i * 90);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check" style="margin-right:8px;"></i>Mensagem Enviada!';
+            btn.style.background = '#237a08';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+                e.target.reset();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

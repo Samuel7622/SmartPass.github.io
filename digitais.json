@@ -1,0 +1,18 @@
+[
+  {
+    "nome": "samuel",
+    "matricula": "2024123ISINF0021",
+    "ano": "2° Ano",
+    "curso": "Informatica",
+    "id": 0,
+    "dataCadastro": "24/11/2025",
+    "ultimoAcesso": "Entrada: 24/11/2025 às 10:38:53",
+    "presencas": {
+      "24/11/2025": {
+        "saida": "10:33:12",
+        "status": "PRESENTE",
+        "entrada": "10:38:53"
+      }
+    }
+  }
+]

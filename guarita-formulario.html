@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPass IFPI - Liberar Saída Excepcional</title>
+    
+    <!-- SCRIPT PARA APLICAR TEMA ANTES DE QUALQUER RENDERIZAÇÃO -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            const savedFontSize = localStorage.getItem('fontSize') || '16';
+            if (savedDarkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            document.documentElement.style.fontSize = savedFontSize + 'px';
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Fontes importadas -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #1a5c06;
+            --green-dark: #0f3a03;
+            --green-mid: #237a08;
+            --green-light: #4caf50;
+            --yellow: #f9d923;
+            --ifpi-green: #1d4903;
+            --ifpi-yellow: #ffeb3b;
+            --bg: #f5f7f5;
+            --bg2: #eaf3e8;
+            --text: #000000;
+            --text-muted: #555555;
+            --card-bg: #ffffff;
+            --border: rgba(26, 92, 6, 0.704);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+            --warning: #ff9800;
+            --warning-dark: #e65100;
+            --danger: #dc3545;
+            --success: #28a745;
+            --info: #17a2b8;
+        }
+
+        [data-theme="dark"] {
+            --bg: #111a10;
+            --bg2: #182216;
+            --text: #d4e8d0;
+            --text-muted: #7aaa73;
+            --card-bg: #1e2d1c;
+            --border: rgba(76,175,80,0.15);
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 1.1rem 0;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo i { color: var(--yellow); }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        nav ul li a {
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav ul li a:hover {
+            color: var(--ifpi-yellow);
+        }
+
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--ifpi-yellow);
+            transition: width 0.3s ease;
+        }
+
+        nav ul li a:hover::after {
+            width: 100%;
+        }
+
+        nav ul li a.active {
+            color: var(--ifpi-yellow);
+        }
+
+        nav ul li a.active::after {
+            width: 100%;
+        }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-left: 0.5rem;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .header-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .header-user-profile:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header-user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: var(--yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ifpi-green);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+        }
+
+        .header-user-role {
+            font-size: 0.75rem;
+            color: var(--yellow);
+            text-transform: capitalize;
+        }
+
+        .role-badge {
+            background: var(--warning);
+            color: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            nav ul {
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                background: var(--green-dark);
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            nav ul.open {
+                max-height: 500px;
+                padding: 0.5rem 0;
+            }
+            nav ul li a {
+                display: block;
+                padding: 0.7rem 1.5rem;
+                border-radius: 0;
+            }
+            .header-user-profile {
+                border-radius: 8px;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            margin-top: 80px;
+            padding: 2.5rem 0;
+            background: linear-gradient(145deg, var(--ifpi-green) 0%, var(--green-mid) 80%, #2e7d07 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--yellow);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            gap: 0.8rem;
+            color: white;
+        }
+
+        /* ===== FORM SECTION ===== */
+        .form-section {
+            padding: 3rem 0;
+        }
+
+        .form-container {
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+
+        .form-header i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header h2 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+        }
+
+        .form-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .form-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-group label .required {
+            color: var(--danger);
+            margin-left: 0.25rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--warning);
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Busca de aluno */
+        .search-container {
+            position: relative;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .search-result-item:hover {
+            background: var(--warning);
+            color: white;
+        }
+
+        .search-result-item .aluno-nome {
+            font-weight: bold;
+        }
+
+        .search-result-item .aluno-info {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Tipo de saída */
+        .saida-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .type-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .type-option:hover {
+            border-color: var(--warning);
+            background: rgba(255, 152, 0, 0.05);
+        }
+
+        .type-option.selected {
+            border-color: var(--warning);
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .type-option i {
+            font-size: 1.2rem;
+            color: var(--warning);
+        }
+
+        .type-option span {
+            font-weight: 600;
+        }
+
+        /* Documentos */
+        .document-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .document-area:hover {
+            border-color: var(--warning);
+            background: rgba(255, 152, 0, 0.05);
+        }
+
+        .document-area i {
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .document-area p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-name {
+            font-size: 0.8rem;
+            color: var(--success);
+            margin-top: 0.5rem;
+        }
+
+        /* Botões */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-submit {
+            flex: 1;
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-cancel {
+            flex: 1;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        /* Alerta de responsável */
+        .alert-responsavel {
+            background: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .alert-responsavel.show {
+            display: block;
+        }
+
+        .alert-responsavel i {
+            color: var(--success);
+            margin-right: 0.5rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #0f3a03;
+            color: #c8e6c9;
+            padding: 2rem 0 1rem;
+            margin-top: 2rem;
+        }
+
+        [data-theme="dark"] footer {
+            background: #070e06;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.82rem;
+            color: #81c784;
+        }
+
+        .footer-bottom ul {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-bottom ul a {
+            color: #81c784;
+            text-decoration: none;
+        }
+
+        .footer-bottom ul a:hover {
+            color: var(--yellow);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .saida-types {
+                grid-template-columns: 1fr;
+            }
+            .form-actions {
+                flex-direction: column;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="container">
+            <a class="logo" href="dashboard-guarda.html">
+                <i class="fas fa-id-card"></i>
+                SmartPass
+            </a>
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul id="navMenu">
+                <li><a href="dashboard-guarda.html">Início</a></li>
+                <li><a href="admin.html">Painel Admin</a></li>
+                <li><a href="configuracoes.html">Configurações</a></li>
+                <li><a href="liberar-saida.html" class="active">Liberar Saída</a></li>
+                <li><a href="saidas-excepcionais.html">Histórico</a></li>
+                <li>
+                    <div class="header-user-profile" onclick="window.location.href='perfil.html'">
+                        <div class="header-user-avatar" id="headerUserAvatar">G</div>
+                        <div class="header-user-info">
+                            <span class="header-user-name" id="headerUserName">Carlos Guarda</span>
+                            <span class="header-user-role" id="headerUserRole">Porteiro <span class="role-badge">Guarda/Gestão</span></span>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                <li>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- PAGE HEADER -->
+    <section class="page-header">
+        <div class="container">
+            <a href="dashboard-guarda.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+            </a>
+            <h1><i class="fas fa-door-open"></i> Liberar Saída Excepcional</h1>
+            <p>Preencha o formulário abaixo para autorizar a saída de um aluno em caso especial</p>
+        </div>
+    </section>
+
+    <!-- FORM SECTION -->
+    <section class="form-section">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h2>Autorização de Saída</h2>
+                    <p>Registre a liberação do aluno com todos os detalhes necessários</p>
+                </div>
+                <div class="form-body">
+                    <form id="saidaForm">
+                        <!-- Dados do Aluno -->
+                        <div class="form-group">
+                            <label>Buscar Aluno <span class="required">*</span></label>
+                            <div class="search-container">
+                                <input type="text" id="buscaAluno" placeholder="Digite nome ou matrícula do aluno..." autocomplete="off">
+                                <div class="search-results" id="searchResults"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nome do Aluno <span class="required">*</span></label>
+                                <input type="text" id="nomeAluno" readonly placeholder="Selecione um aluno acima" style="background: var(--bg2); cursor: pointer;" onclick="document.getElementById('buscaAluno').focus()">
+                            </div>
+                            <div class="form-group">
+                                <label>Matrícula <span class="required">*</span></label>
+                                <input type="text" id="matriculaAluno" readonly placeholder="---" style="background: var(--bg2);">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Turma</label>
+                                <input type="text" id="turmaAluno" readonly placeholder="---" style="background: var(--bg2);">
+                            </div>
+                            <div class="form-group">
+                                <label>Responsável</label>
+                                <input type="text" id="responsavelAluno" readonly placeholder="---" style="background: var(--bg2);">
+                            </div>
+                        </div>
+
+                        <!-- Alerta de contato com responsável -->
+                        <div class="alert-responsavel" id="alertResponsavel">
+                            <i class="fas fa-phone-alt"></i> 
+                            <strong>Notificar responsável?</strong> O responsável será informado via SMS/WhatsApp sobre esta saída.
+                        </div>
+
+                        <!-- Tipo de Saída -->
+                        <div class="form-group">
+                            <label>Tipo de Saída <span class="required">*</span></label>
+                            <div class="saida-types">
+                                <div class="type-option" data-type="saude">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Saúde / Doença</span>
+                                </div>
+                                <div class="type-option" data-type="consulta">
+                                    <i class="fas fa-stethoscope"></i>
+                                    <span>Consulta Médica</span>
+                                </div>
+                                <div class="type-option" data-type="familiar">
+                                    <i class="fas fa-heart"></i>
+                                    <span>Problema Familiar</span>
+                                </div>
+                                <div class="type-option" data-type="documento">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span>Documentação</span>
+                                </div>
+                                <div class="type-option" data-type="outro">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <span>Outro Motivo</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Motivo da Saída -->
+                        <div class="form-group">
+                            <label>Motivo da Saída <span class="required">*</span></label>
+                            <textarea id="motivoSaida" rows="3" placeholder="Descreva detalhadamente o motivo da saída excepcional..."></textarea>
+                        </div>
+
+                        <!-- Horário -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data da Saída <span class="required">*</span></label>
+                                <input type="date" id="dataSaida">
+                            </div>
+                            <div class="form-group">
+                                <label>Horário <span class="required">*</span></label>
+                                <input type="time" id="horarioSaida">
+                            </div>
+                        </div>
+
+                        <!-- Previsão de Retorno -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Previsão de Retorno</label>
+                                <input type="time" id="previsaoRetorno" placeholder="Opcional">
+                            </div>
+                            <div class="form-group">
+                                <label>Acompanhante</label>
+                                <input type="text" id="acompanhante" placeholder="Quem está retirando o aluno?">
+                            </div>
+                        </div>
+
+                        <!-- Documento anexado -->
+                        <div class="form-group">
+                            <label>Documento Comprobatório</label>
+                            <div class="document-area" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Clique para anexar um documento (atestado, autorização, etc.)</p>
+                                <input type="file" id="fileInput" class="file-input" accept=".pdf,.jpg,.png">
+                                <div class="file-name" id="fileName"></div>
+                            </div>
+                        </div>
+
+                        <!-- Observações adicionais -->
+                        <div class="form-group">
+                            <label>Observações Adicionais</label>
+                            <textarea id="observacoes" rows="2" placeholder="Informações complementares sobre a liberação..."></textarea>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="form-actions">
+                            <button type="button" class="btn-cancel" onclick="cancelarLiberacao()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn-submit" onclick="registrarSaida()">
+                                <i class="fas fa-check-circle"></i> Autorizar Saída
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Operação realizada com sucesso!</span>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-bottom">
+                <p>© 2025 SmartPass. Todos os direitos reservados.</p>
+                <ul>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="#">Acessibilidade</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Dados mockados de alunos
+        const alunosData = [
+            { id: 1, nome: "João Pedro Silva", matricula: "202400123", turma: "3° Ano A", responsavel: "Maria Silva", telefone: "(89) 99999-1234" },
+            { id: 2, nome: "Ana Beatriz Costa", matricula: "202400456", turma: "2° Ano B", responsavel: "Carlos Costa", telefone: "(89) 99999-4567" },
+            { id: 3, nome: "Miguel Santos", matricula: "202400789", turma: "1° Ano C", responsavel: "Fernanda Santos", telefone: "(89) 99999-7890" },
+            { id: 4, nome: "Isabela Ferreira", matricula: "202401234", turma: "3° Ano B", responsavel: "Roberto Ferreira", telefone: "(89) 99999-2345" },
+            { id: 5, nome: "Lucas Oliveira", matricula: "202401567", turma: "2° Ano A", responsavel: "Patrícia Oliveira", telefone: "(89) 99999-5678" },
+            { id: 6, nome: "Sofia Mendes", matricula: "202401890", turma: "1° Ano B", responsavel: "Ricardo Mendes", telefone: "(89) 99999-8901" },
+            { id: 7, nome: "Rafael Costa", matricula: "202402345", turma: "3° Ano C", responsavel: "Juliana Costa", telefone: "(89) 99999-3456" }
+        ];
+
+        let selectedAluno = null;
+        let selectedType = null;
+
+        // Busca de aluno
+        const buscaInput = document.getElementById('buscaAluno');
+        const searchResults = document.getElementById('searchResults');
+
+        buscaInput.addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+            if (term.length < 2) {
+                searchResults.classList.remove('show');
+                return;
+            }
+
+            const filtered = alunosData.filter(aluno => 
+                aluno.nome.toLowerCase().includes(term) || 
+                aluno.matricula.includes(term)
+            );
+
+            if (filtered.length > 0) {
+                searchResults.innerHTML = filtered.map(aluno => `
+                    <div class="search-result-item" onclick="selectAluno(${aluno.id})">
+                        <div class="aluno-nome">${aluno.nome}</div>
+                        <div class="aluno-info">Matrícula: ${aluno.matricula} | Turma: ${aluno.turma}</div>
+                    </div>
+                `).join('');
+                searchResults.classList.add('show');
+            } else {
+                searchResults.innerHTML = '<div class="search-result-item" style="color: var(--text-muted);">Nenhum aluno encontrado</div>';
+                searchResults.classList.add('show');
+            }
+        });
+
+        // Fechar resultados ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (!buscaInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('show');
+            }
+        });
+
+        function selectAluno(id) {
+            selectedAluno = alunosData.find(a => a.id === id);
+            document.getElementById('nomeAluno').value = selectedAluno.nome;
+            document.getElementById('matriculaAluno').value = selectedAluno.matricula;
+            document.getElementById('turmaAluno').value = selectedAluno.turma;
+            document.getElementById('responsavelAluno').value = selectedAluno.responsavel;
+            document.getElementById('alertResponsavel').classList.add('show');
+            buscaInput.value = selectedAluno.nome;
+            searchResults.classList.remove('show');
+        }
+
+        // Tipo de saída
+        const typeOptions = document.querySelectorAll('.type-option');
+        typeOptions.forEach(opt => {
+            opt.addEventListener('click', function() {
+                typeOptions.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedType = this.getAttribute('data-type');
+                
+                // Preencher motivo padrão baseado no tipo
+                const motivos = {
+                    'saude': 'Aluno apresentou mal-estar e febre, necessitando atendimento médico.',
+                    'consulta': 'Aluno possui consulta médica agendada para este horário.',
+                    'familiar': 'Problema familiar urgente informado pelo responsável.',
+                    'documento': 'Aluno precisa resolver pendências documentais fora da escola.',
+                    'outro': ''
+                };
+                if (motivos[selectedType]) {
+                    document.getElementById('motivoSaida').value = motivos[selectedType];
+                } else {
+                    document.getElementById('motivoSaida').value = '';
+                }
+            });
+        });
+
+        // Data e hora padrão
+        const hoje = new Date();
+        document.getElementById('dataSaida').value = hoje.toISOString().split('T')[0];
+        document.getElementById('horarioSaida').value = hoje.toHoursString();
+        
+        // Helper para hora atual
+        Date.prototype.toHoursString = function() {
+            return `${this.getHours().toString().padStart(2, '0')}:${this.getMinutes().toString().padStart(2, '0')}`;
+        };
+
+        // Upload de arquivo
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileName.innerHTML = `<i class="fas fa-paperclip"></i> ${this.files[0].name}`;
+            } else {
+                fileName.innerHTML = '';
+            }
+        });
+
+        // Função para mostrar toast
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.innerHTML = message;
+            toast.classList.remove('error');
+            if (isError) {
+                toast.classList.add('error');
+                toast.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else {
+                toast.querySelector('i').className = 'fas fa-check-circle';
+            }
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Validar formulário
+        function validarFormulario() {
+            if (!selectedAluno) {
+                showToast('❌ Selecione um aluno antes de continuar!', true);
+                return false;
+            }
+            if (!selectedType) {
+                showToast('❌ Selecione o tipo de saída!', true);
+                return false;
+            }
+            if (!document.getElementById('motivoSaida').value.trim()) {
+                showToast('❌ Descreva o motivo da saída!', true);
+                return false;
+            }
+            if (!document.getElementById('dataSaida').value) {
+                showToast('❌ Informe a data da saída!', true);
+                return false;
+            }
+            if (!document.getElementById('horarioSaida').value) {
+                showToast('❌ Informe o horário da saída!', true);
+                return false;
+            }
+            return true;
+        }
+
+        // Registrar saída
+        function registrarSaida() {
+            if (!validarFormulario()) return;
+
+            const saida = {
+                id: Date.now(),
+                aluno: selectedAluno.nome,
+                matricula: selectedAluno.matricula,
+                turma: document.getElementById('turmaAluno').value,
+                responsavel: document.getElementById('responsavelAluno').value,
+                tipoSaida: selectedType,
+                motivo: document.getElementById('motivoSaida').value,
+                data: document.getElementById('dataSaida').value,
+                horario: document.getElementById('horarioSaida').value,
+                previsaoRetorno: document.getElementById('previsaoRetorno').value || 'Não informado',
+                acompanhante: document.getElementById('acompanhante').value || 'Não informado',
+                observacoes: document.getElementById('observacoes').value || 'Nenhuma',
+                autorizadoPor: document.getElementById('headerUserName').innerText,
+                status: 'autorizado',
+                dataHoraRegistro: new Date().toLocaleString()
+            };
+
+            // Salvar no localStorage (simulação)
+            let saidasSalvas = JSON.parse(localStorage.getItem('saidasExcepcionais') || '[]');
+            saidasSalvas.unshift(saida);
+            localStorage.setItem('saidasExcepcionais', JSON.stringify(saidasSalvas));
+
+            // Mostrar resumo e confirmar
+            const confirmMsg = `✅ SAÍDA AUTORIZADA!\n\n` +
+                `Aluno: ${saida.aluno}\n` +
+                `Matrícula: ${saida.matricula}\n` +
+                `Motivo: ${saida.motivo}\n` +
+                `Data/Hora: ${saida.data} às ${saida.horario}\n` +
+                `Autorizado por: ${saida.autorizadoPor}\n\n` +
+                `O responsável será notificado via WhatsApp.`;
+
+            alert(confirmMsg);
+            showToast(`✅ Saída autorizada para ${saida.aluno}!`);
+
+            // Resetar formulário
+            resetarFormulario();
+        }
+
+        function resetarFormulario() {
+            selectedAluno = null;
+            selectedType = null;
+            document.getElementById('buscaAluno').value = '';
+            document.getElementById('nomeAluno').value = '';
+            document.getElementById('matriculaAluno').value = '';
+            document.getElementById('turmaAluno').value = '';
+            document.getElementById('responsavelAluno').value = '';
+            document.getElementById('motivoSaida').value = '';
+            document.getElementById('previsaoRetorno').value = '';
+            document.getElementById('acompanhante').value = '';
+            document.getElementById('observacoes').value = '';
+            document.getElementById('alertResponsavel').classList.remove('show');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').innerHTML = '';
+            
+            typeOptions.forEach(o => o.classList.remove('selected'));
+            
+            const hoje = new Date();
+            document.getElementById('dataSaida').value = hoje.toISOString().split('T')[0];
+            document.getElementById('horarioSaida').value = hoje.toHoursString();
+        }
+
+        function cancelarLiberacao() {
+            if (confirm('Tem certeza que deseja cancelar esta liberação? Os dados não serão salvos.')) {
+                resetarFormulario();
+                showToast('Operação cancelada');
+            }
+        }
+
+        // Funções auxiliares
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('open');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('darkMode', 'false');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('darkMode', 'true');
+            }
+        }
+
+        function logout() {
+            if(confirm('Deseja realmente sair do sistema?')) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Carregar tema salvo
+        const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (savedDarkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</body>
+</html>

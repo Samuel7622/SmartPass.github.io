@@ -1,0 +1,38 @@
+{
+  "name": "rfid-school-system",
+  "version": "1.0.0",
+  "description": "Sistema de controle de acesso RFID para escola",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "^12.0.0",
+    "axios": "^1.16.1",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.76.11",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.1",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.3",
+    "serialport": "^12.0.0",
+    "ws": "^8.20.0"
+  },
+  "keywords": [
+    "rfid",
+    "school",
+    "arduino",
+    "serial"
+  ],
+  "author": "Seu Nome",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

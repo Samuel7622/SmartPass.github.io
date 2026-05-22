@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPass - Perfil do Administrador</title>
+    
+    <!-- SCRIPT PARA APLICAR TEMA ANTES DA RENDERIZAÇÃO -->
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            const savedFontSize = localStorage.getItem('fontSize') || '16';
+            if (savedDarkMode) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            document.documentElement.style.fontSize = savedFontSize + 'px';
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --ifpi-green: #1d4903;
+            --ifpi-light-green: #2e7d07;
+            --ifpi-yellow: #ffeb3b;
+            --transition: all 0.3s ease;
+            --bg-color: #ffffff;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #dddddd;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2d2d2d;
+            --border-color: #444444;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        /* Header (reutilizado) */
+        header {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 1.1rem 0;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        header nav { display: flex; justify-content: space-between; align-items: center; }
+
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo i { color: var(--ifpi-yellow); }
+
+        nav ul { list-style: none; display: flex; align-items: center; gap: 0.2rem; }
+
+        nav ul li a {
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav ul li a:hover { color: var(--ifpi-yellow); }
+
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--ifpi-yellow);
+            transition: width 0.3s ease;
+        }
+
+        nav ul li a:hover::after { width: 100%; }
+
+        .nav-btn {
+            background: rgba(249,217,35,0.18) !important;
+            border: 1.5px solid rgba(249,217,35,0.45) !important;
+            color: var(--ifpi-yellow) !important;
+            padding: 0.42rem 1.1rem !important;
+            border-radius: 8px !important;
+        }
+
+        .nav-btn:hover { background: var(--ifpi-yellow) !important; color: var(--ifpi-green) !important; }
+        .nav-btn::after { display: none !important; }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-left: 0.5rem;
+        }
+
+        .theme-toggle:hover { background: rgba(255,255,255,0.22); }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .header-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .header-user-profile:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header-user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: var(--ifpi-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ifpi-green);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+        }
+
+        .header-user-role {
+            font-size: 0.75rem;
+            color: var(--ifpi-yellow);
+            text-transform: capitalize;
+        }
+
+        /* Conteúdo principal com padding-top para compensar o header fixo */
+        .main-content {
+            padding-top: 90px;
+            min-height: calc(100vh - 250px);
+        }
+
+        /* Estilos da página de perfil */
+        .profile-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--ifpi-green), var(--ifpi-light-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .profile-title h1 {
+            font-size: 2rem;
+            color: var(--ifpi-green);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-title p {
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 1rem;
+        }
+
+        [data-theme="dark"] .profile-title h1 {
+            color: #4caf50;
+        }
+
+        .profile-badge {
+            display: inline-block;
+            background: var(--ifpi-yellow);
+            color: var(--ifpi-green);
+            font-weight: bold;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .profile-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 50px;
+        }
+
+        .profile-card h2 {
+            font-size: 1.3rem;
+            color: var(--ifpi-green);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        [data-theme="dark"] .profile-card h2 {
+            color: #4caf50;
+        }
+
+        .profile-card h2 i {
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--ifpi-green);
+            box-shadow: 0 0 0 3px rgba(29,73,3,0.1);
+        }
+
+        [data-theme="dark"] .form-group input:focus {
+            border-color: #4caf50;
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.2);
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--ifpi-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--ifpi-light-green);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--border-color);
+        }
+
+        .recent-activities {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .recent-activities li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .recent-activities li:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(29,73,3,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ifpi-green);
+        }
+
+        .activity-desc {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            opacity: 0.6;
+        }
+
+        /* Footer (reutilizado) */
+        footer { background: #0f3a03; color: #c8e6c9; padding: 3.5rem 0 1.5rem; margin-top: 3rem; }
+        [data-theme="dark"] footer { background: #070e06; }
+
+        .footer-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 3rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .footer-col h4 {
+            color: #4caf50;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1.1rem;
+            padding-bottom: 0.6rem;
+            position: relative;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: 0;
+            width: 30px; height: 2px;
+            background: var(--ifpi-yellow);
+            border-radius: 2px;
+        }
+
+        .footer-col p { font-size: 0.89rem; line-height: 1.75; color: #a5d6a7; }
+
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 0.58rem; }
+        .footer-links a {
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 0.89rem;
+            transition: var(--transition);
+        }
+        .footer-links a:hover { color: var(--ifpi-yellow); padding-left: 6px; }
+
+        .contact-row { font-size: 0.87rem; margin-bottom: 0.52rem; color: #c8e6c9; }
+        .contact-row .lbl { color: #4caf50; font-weight: 700; display: inline-block; width: 72px; }
+
+        .footer-social { display: flex; gap: 0.8rem; margin-top: 1rem; }
+        .social-btn {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: #c8e6c9;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .social-btn:hover { background: var(--ifpi-yellow); color: var(--ifpi-green); }
+
+        footer hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin-bottom: 1.5rem; }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.82rem;
+            color: #81c784;
+        }
+
+        .footer-bottom ul { list-style: none; display: flex; gap: 1.5rem; }
+        .footer-bottom ul a { color: #81c784; text-decoration: none; transition: var(--transition); }
+        .footer-bottom ul a:hover { color: var(--ifpi-yellow); }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            nav ul {
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                background: var(--ifpi-green);
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            nav ul.open { max-height: 460px; padding: 0.5rem 0; }
+            nav ul li a { display: block; padding: 0.7rem 1.5rem; border-radius: 0; }
+            nav ul li a.nav-btn { margin: 0.5rem 1rem; border-radius: 8px; text-align: center; }
+            .profile-grid { grid-template-columns: 1fr; }
+            .profile-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a class="logo" href="dashboard.html">
+                <i class="fas fa-id-card"></i>
+                SmartPass
+            </a>
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul id="navMenu">
+                <li><a href="dashboard.html">Início</a></li>
+                <li><a href="admin.html">Painel Admin</a></li>
+                <li><a href="configuracoes.html">Configurações</a></li>
+                <li>
+                    <div class="header-user-profile" onclick="window.location.href='perfil-admin.html'">
+                        <div class="header-user-avatar" id="headerUserAvatar">?</div>
+                        <div class="header-user-info">
+                            <span class="header-user-name" id="headerUserName">Visitante</span>
+                            <span class="header-user-role" id="headerUserRole">Não logado</span>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                <li>
+                   
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="profile-container">
+                <!-- Cabeçalho do perfil -->
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="profile-title">
+                        <h1 id="profileName">Carregando...</h1>
+                        <p id="profileEmail">carregando@email.com</p>
+                        <span class="profile-badge" id="profileRole">Administrador</span>
+                    </div>
+                </div>
+<!-- Card: Ajuda / Suporte -->
+<div class="profile-card" style="margin-top: 2rem;">
+    <h2><i class="fas fa-headset"></i> Precisa de ajuda?</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Estamos aqui para resolver seus problemas. Entre em contato com nossa equipe de suporte.</p>
+    <a href="#contato" class="btn btn-primary" style="display: inline-block; text-decoration: none;">
+        <i class="fas fa-question-circle"></i> Problemas com a conta? Acesse o suporte
+    </a>
+</div>
+                <!-- Grade com dois cards -->
+                <div class="profile-grid">
+                    <!-- Card: Informações Pessoais -->
+                    <div class="profile-card">
+                        <h2><i class="fas fa-user-circle"></i> Informações Pessoais</h2>
+                        <form id="profileInfoForm">
+                            <div class="form-group">
+                                <label for="fullName">Nome completo</label>
+                                <input type="text" id="fullName" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="role">Função</label>
+                                <input type="text" id="role" value="" disabled>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                        </form>
+                    </div>
+
+                    <!-- Card: Segurança (Alterar senha) -->
+                    <div class="profile-card">
+                        <h2><i class="fas fa-lock"></i> Segurança</h2>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Senha atual</label>
+                                <input type="password" id="currentPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">Nova senha</label>
+                                <input type="password" id="newPassword" placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirmar nova senha</label>
+                                <input type="password" id="confirmPassword" placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Alterar senha</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Card: Atividades Recentes (mock) -->
+                <div class="profile-card" style="margin-top: 2rem;">
+                    <h2><i class="fas fa-history"></i> Atividades Recentes</h2>
+                    <ul class="recent-activities" id="recentActivities">
+                        <li>
+                            <div class="activity-icon"><i class="fas fa-sign-in-alt"></i></div>
+                            <div class="activity-desc">Login realizado</div>
+                            <div class="activity-time">agora mesmo</div>
+                        </li>
+                        <li>
+                            <div class="activity-icon"><i class="fas fa-cog"></i></div>
+                            <div class="activity-desc">Configurações alteradas</div>
+                            <div class="activity-time">há 2 horas</div>
+                        </li>
+                        <li>
+                            <div class="activity-icon"><i class="fas fa-user-plus"></i></div>
+                            <div class="activity-desc">Novo usuário cadastrado</div>
+                            <div class="activity-time">há 5 horas</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>SmartPass</h4>
+                    <p>Sistema de controle de acesso escolar criado para promover segurança, modernização e tranquilidade para toda a comunidade escolar.</p>
+                    <div class="footer-social">
+                        <a class="social-btn" href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a class="social-btn" href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a class="social-btn" href="#" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a class="social-btn" href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Links Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="#inicio">Início</a></li>
+                        <li><a href="#servicos">Serviços</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#sobre">Sobre Nós</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#contato">Suporte</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contato</h4>
+                    <div class="contact-row"><span class="lbl">Endereço:</span> Pedro II, Piauí</div>
+                    <div class="contact-row"><span class="lbl">Telefone:</span> (89) 0000-0000</div>
+                    <div class="contact-row"><span class="lbl">E-mail:</span> contato@smartpass.edu.br</div>
+                    <div class="contact-row"><span class="lbl">Horário:</span> Seg–Sex, 07h–18h</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Instituição</h4>
+                    <p>Projeto desenvolvido no IFPI – Campus Pedro II, como solução tecnológica para o controle de acesso escolar.</p>
+                    <p style="margin-top:0.8rem;font-size:0.84rem;color:#81c784;">Projeto acadêmico com aplicação real.</p>
+                </div>
+            </div>
+            <hr>
+            <div class="footer-bottom">
+                <p>© 2025 SmartPass. Todos os direitos reservados.</p>
+                <ul>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="#">Acessibilidade</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+<script>
+    // ---------- TEMA ----------
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('darkMode', 'false');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('darkMode', 'true');
+        }
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) themeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
+    // ---------- LOGOUT ----------
+    function logout() {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+    }
+
+    // ---------- ATIVIDADES RECENTES ----------
+    function obterAtividades() {
+        const stored = localStorage.getItem('recentActivities');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch(e) { return []; }
+        }
+        return [];
+    }
+
+    function salvarAtividades(atividades) {
+        localStorage.setItem('recentActivities', JSON.stringify(atividades.slice(0, 10))); // guarda só as 10 mais recentes
+    }
+
+    // Formatar data/hora relativa (ex: "agora mesmo", "há 2 horas")
+    function formatarTempoRelativo(timestamp) {
+        const diff = Date.now() - timestamp;
+        const segundos = Math.floor(diff / 1000);
+        const minutos = Math.floor(segundos / 60);
+        const horas = Math.floor(minutos / 60);
+        const dias = Math.floor(horas / 24);
+
+        if (dias > 0) return `há ${dias} dia${dias !== 1 ? 's' : ''}`;
+        if (horas > 0) return `há ${horas} hora${horas !== 1 ? 's' : ''}`;
+        if (minutos > 0) return `há ${minutos} minuto${minutos !== 1 ? 's' : ''}`;
+        return 'agora mesmo';
+    }
+
+    function adicionarAtividade(descricao, icone = 'fas fa-info-circle') {
+        const atividades = obterAtividades();
+        atividades.unshift({
+            descricao: descricao,
+            icone: icone,
+            timestamp: Date.now()
+        });
+        salvarAtividades(atividades);
+        renderizarAtividades();
+    }
+
+    function renderizarAtividades() {
+        const lista = document.getElementById('recentActivities');
+        if (!lista) return;
+        const atividades = obterAtividades();
+        if (atividades.length === 0) {
+            lista.innerHTML = '<li style="text-align:center; padding:1rem;">Nenhuma atividade recente</li>';
+            return;
+        }
+        lista.innerHTML = atividades.map(act => `
+            <li>
+                <div class="activity-icon"><i class="${act.icone}"></i></div>
+                <div class="activity-desc">${act.descricao}</div>
+                <div class="activity-time">${formatarTempoRelativo(act.timestamp)}</div>
+            </li>
+        `).join('');
+    }
+
+    // ---------- HEADER ----------
+    function atualizarHeader() {
+        const userData = localStorage.getItem('currentUser');
+        if (!userData) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const user = JSON.parse(userData);
+        const avatarEl = document.getElementById('headerUserAvatar');
+        const nomeEl = document.getElementById('headerUserName');
+        const roleEl = document.getElementById('headerUserRole');
+        if (avatarEl) avatarEl.textContent = user.name.charAt(0).toUpperCase();
+        if (nomeEl) nomeEl.textContent = user.name;
+        let roleLabel = '';
+        if (user.role === 'admin_master') roleLabel = 'Admin Master';
+        else if (user.role === 'admin_ifpi') roleLabel = 'Admin IFPI';
+        else if (user.role === 'guarita') roleLabel = 'Guarita';
+        else roleLabel = 'Aluno';
+        if (roleEl) roleEl.textContent = roleLabel;
+    }
+
+    // ---------- PERFIL ----------
+    async function carregarPerfil() {
+        const userData = localStorage.getItem('currentUser');
+        if (!userData) {
+            window.location.href = 'login.html';
+            return;
+        }
+        const user = JSON.parse(userData);
+        if (!user.id || !user.role) {
+            alert('Dados do usuário incompletos. Faça login novamente.');
+            logout();
+            return;
+        }
+
+        // Se não houver atividades, adiciona "Login realizado"
+        const atividades = obterAtividades();
+        if (atividades.length === 0) {
+            adicionarAtividade('Login realizado', 'fas fa-sign-in-alt');
+        } else {
+            renderizarAtividades();
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/perfil/${user.id}/${user.role}`);
+            const data = await response.json();
+            if (data.success) {
+                const perfil = data.user;
+                document.getElementById('profileName').textContent = perfil.name;
+                document.getElementById('profileEmail').textContent = perfil.email;
+
+                let roleLabel = '';
+                if (user.role === 'admin_master') roleLabel = 'Admin Master';
+                else if (user.role === 'admin_ifpi') roleLabel = 'Admin IFPI';
+                else if (user.role === 'guarita') roleLabel = 'Guarita';
+                else roleLabel = 'Aluno';
+                document.getElementById('profileRole').textContent = roleLabel;
+
+                document.getElementById('fullName').value = perfil.name;
+                document.getElementById('email').value = perfil.email;
+                document.getElementById('role').value = roleLabel;
+
+                atualizarHeader();
+            } else {
+                alert('Erro ao carregar perfil: ' + (data.error || ''));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de conexão com o servidor. Verifique se o backend está rodando.');
+        }
+    }
+
+    // ---------- SALVAR PERFIL (com atividade) ----------
+    document.getElementById('profileInfoForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const novoNome = document.getElementById('fullName').value;
+        const novoEmail = document.getElementById('email').value;
+        const userData = localStorage.getItem('currentUser');
+        if (!userData) return;
+        const user = JSON.parse(userData);
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/perfil/${user.id}/${user.role}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: novoNome, email: novoEmail })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Dados atualizados com sucesso!');
+                user.name = novoNome;
+                user.email = novoEmail;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                adicionarAtividade('Dados do perfil atualizados', 'fas fa-user-edit');
+                carregarPerfil();
+            } else {
+                alert(data.error || 'Erro ao atualizar perfil');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de conexão com o servidor');
+        }
+    });
+
+    // ---------- ALTERAR SENHA (com atividade) ----------
+    document.getElementById('changePasswordForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const senhaAtual = document.getElementById('currentPassword').value;
+        const novaSenha = document.getElementById('newPassword').value;
+        const confirmar = document.getElementById('confirmPassword').value;
+
+        if (!senhaAtual || !novaSenha || !confirmar) {
+            alert('Preencha todos os campos de senha.');
+            return;
+        }
+        if (novaSenha !== confirmar) {
+            alert('A nova senha e a confirmação não coincidem.');
+            return;
+        }
+
+        const userData = localStorage.getItem('currentUser');
+        if (!userData) return;
+        const user = JSON.parse(userData);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/alterar-senha', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: user.id,
+                    role: user.role,
+                    currentPassword: senhaAtual,
+                    newPassword: novaSenha
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Senha alterada com sucesso!');
+                adicionarAtividade('Senha alterada', 'fas fa-key');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                alert(data.error || 'Erro ao alterar senha');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de conexão com o servidor');
+        }
+    });
+
+    // ---------- INICIALIZAÇÃO ----------
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tema
+        const isDark = localStorage.getItem('darkMode') === 'true';
+        if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+        else document.documentElement.removeAttribute('data-theme');
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+
+        if (!localStorage.getItem('currentUser')) {
+            window.location.href = 'login.html';
+        } else {
+            atualizarHeader();
+            carregarPerfil();
+            renderizarAtividades(); // garante que a lista será exibida mesmo se não houver modificação
+        }
+    });
+</script>
+</body>
+</html>
