@@ -20,7 +20,7 @@ O **Smart Pass** é uma solução moderna para simplificar e automatizar o contr
 
 ## Funcionalidades
 
-- **Autenticação segura** — Geração de passes criptografados via QR Code dinâmico, com rotação automática para evitar reutilização.
+- **Autenticação segura** — Geração de passes criptografados dinâmico, com rotação automática para evitar reutilização.
 - **Validação em tempo real** — Sincronização instantânea com o banco de dados para prevenção de fraudes e acessos duplicados.
 - **Painel administrativo** — Métricas de fluxo de usuários, horários de pico e relatórios detalhados de acesso exportáveis.
 - **Modo offline** — Validação local durante instabilidade de rede, com sincronização automática ao reconectar.
