@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: smartpass-postgres
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution123
+      POSTGRES_DB: evolution
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartpass-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  evolution:
+    image: atendai/evolution-api:latest
+    container_name: smartpass-evolution
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTHENTICATION_API_KEY=SmartPass2025SuperSecretKeyForWhatsApp1234567890
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution:evolution123@postgres:5432/evolution
+      - CACHE_REDIS_URL=redis://redis:6379
+      - CACHE_REDIS_ENABLED=true
+      - CORS_ORIGIN=*
+      - CORS_METHODS=GET,POST,PUT,DELETE
+      - CORS_CREDENTIALS=true
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    volumes:
+      - evolution_media:/app/media
+
+volumes:
+  postgres_data:
+  redis_data:
+  evolution_media:

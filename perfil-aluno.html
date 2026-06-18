@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SmartPass — Perfil do Aluno</title>
+    <script>
+        (function() {
+            const dark = localStorage.getItem('darkMode') === 'true';
+            if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #1a5c06;
+            --green-dark: #0f3a03;
+            --green-mid: #237a08;
+            --green-light: #4caf50;
+            --yellow: #f9d923;
+            --bg: #f5f7f5;
+            --bg2: #eaf3e8;
+            --text: #000000;
+            --text-muted: #2c4a1e;
+            --card-bg: #ffffff;
+            --border: rgba(26,92,6,0.20);
+            --border-strong: rgba(26,92,6,0.30);
+            --shadow: 0 12px 28px rgba(0,0,0,0.06);
+            --transition: all 0.2s ease;
+            --ifpi-green: #1d4903;
+            --ifpi-yellow: #ffeb3b;
+            --present-bg: rgba(26,92,6,0.09);
+            --present-border: rgba(26,92,6,0.22);
+            --absent-bg: #fee2e2;
+            --absent-border: #dc3545;
+            --incomplete-bg: #fef3c7;
+            --incomplete-border: #f5a623;
+        }
+        [data-theme="dark"] {
+            --green: #4caf50;
+            --green-dark: #1b5e20;
+            --green-mid: #388e3c;
+            --green-light: #8bc34a;
+            --yellow: #f9d923;
+            --bg: #0f120e;
+            --bg2: #1a2418;
+            --text: #e2f0da;
+            --text-muted: #b0d9a0;
+            --card-bg: #1e2a1b;
+            --border: rgba(76,175,80,0.2);
+            --border-strong: rgba(76,175,80,0.35);
+            --shadow: 0 12px 28px rgba(0,0,0,0.4);
+            --present-bg: rgba(76,175,80,0.1);
+            --present-border: rgba(76,175,80,0.25);
+            --absent-bg: #442a2a;
+            --absent-border: #ff6b5b;
+            --incomplete-bg: #4a3e1f;
+            --incomplete-border: #ffbe3c;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+            line-height: 1.5;
+        }
+        header {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 0.9rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.8rem;
+        }
+        header nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+        .logo i { color: var(--yellow); }
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        nav ul li a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.45rem 1rem;
+            border-radius: 40px;
+            transition: 0.2s;
+        }
+        nav ul li a:hover, nav ul li a.active {
+            background: rgba(249,217,35,0.15);
+            color: var(--yellow);
+        }
+        .nav-btn {
+            background: rgba(249,217,35,0.2) !important;
+            border: 1px solid rgba(249,217,35,0.5) !important;
+            color: var(--yellow) !important;
+        }
+        .nav-btn:hover {
+            background: var(--yellow) !important;
+            color: var(--green-dark) !important;
+        }
+        .theme-toggle {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-left: 0.3rem;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+        .page-banner {
+            margin-top: 70px;
+            background: linear-gradient(110deg, var(--green-dark) 0%, var(--green) 100%);
+            padding: 1.8rem 0 1.6rem;
+            position: relative;
+        }
+        .page-banner-inner {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .banner-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(249,217,35,0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--yellow);
+        }
+        .page-banner h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.6rem;
+            color: white;
+        }
+        .page-banner p {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.85rem;
+        }
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 0.6rem;
+        }
+        .breadcrumb a { color: rgba(255,255,255,0.7); text-decoration: none; }
+        .breadcrumb a:hover { color: var(--yellow); }
+        .main-content {
+            padding: 2rem 0 3rem;
+            background: var(--bg2);
+        }
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.3rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: 0 18px 32px rgba(0,0,0,0.08); }
+        .card-title {
+            font-family: 'Merriweather', serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
+            letter-spacing: -0.2px;
+        }
+        .card-title i { color: var(--green); font-size: 0.95rem; }
+        .sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+        .photo-wrap {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 0.8rem;
+            border-radius: 50%;
+            border: 3px solid var(--green);
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .student-name {
+            font-family: 'Merriweather', serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-align: center;
+        }
+        .student-id { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-bottom: 0.5rem; }
+        .status-badge {
+            display: inline-flex;
+            background: var(--present-bg);
+            gap: 6px;
+            padding: 0.15rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 800;
+        }
+        .matric-tag {
+            background: var(--bg2);
+            padding: 0.2rem 0.7rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .qi-item {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.8rem;
+        }
+        .qi-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(26,92,6,0.08);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+        }
+        .qi-label { font-size: 0.6rem; text-transform: uppercase; color: var(--text-muted); }
+        .qi-val { font-weight: 700; font-size: 0.8rem; }
+        .method-item {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.6rem;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 0.6rem;
+        }
+        .method-item.active { border-color: var(--green); background: var(--present-bg); }
+        .method-icon-wrap {
+            width: 34px;
+            height: 34px;
+            background: var(--bg2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+        }
+        .last-access {
+            background: var(--bg2);
+            border-radius: 16px;
+            padding: 0.7rem;
+            margin-top: 0.3rem;
+            font-size: 0.7rem;
+        }
+        .last-access strong { font-size: 0.7rem; display: block; margin-bottom: 0.3rem;}
+        .academic-info {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 0.9rem;
+            border: 1px solid var(--border);
+        }
+        .academic-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            margin-bottom: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .academic-label { font-weight: 700; color: var(--green); }
+        .academic-value { font-weight: 600; }
+        .course-badge {
+            background: var(--bg2);
+            border-radius: 40px;
+            padding: 0.2rem 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+        .calendar-card { padding: 1rem; }
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.8rem;
+        }
+        .month-title {
+            font-family: 'Merriweather', serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .month-btn {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 0.4rem;
+            font-weight: 800;
+            font-size: 0.6rem;
+            color: var(--green);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .cal-day {
+            aspect-ratio: 1;
+            background: var(--bg2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            border: 1px solid var(--border);
+            transition: 0.1s;
+        }
+        .cal-day.presente { background: var(--present-bg); border-color: var(--present-border); color: var(--green); }
+        .cal-day.falta { background: var(--absent-bg); border-color: var(--absent-border); color: #dc3545; }
+        .cal-day.incompleto { background: var(--incomplete-bg); border-color: var(--incomplete-border); color: #e67e22; cursor: pointer; }
+        .cal-day.weekend { background: transparent; opacity: 0.5; }
+        .cal-day.other-month { opacity: 0.3; background: var(--bg); }
+        .cal-day.feriado { background: var(--incomplete-bg); border-color: var(--incomplete-border); color: #e67e22; }
+        .day-icon { font-size: 0.55rem; margin-top: 2px; font-weight: 800; }
+        .cal-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            margin: 0.6rem 0 0.6rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.6rem;
+        }
+        .leg-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .freq-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+        }
+        .freq-item {
+            background: var(--bg2);
+            border-radius: 16px;
+            padding: 0.4rem;
+            text-align: center;
+        }
+        .freq-num {
+            font-family: 'Merriweather', serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+        .freq-label {
+            font-size: 0.55rem;
+            font-weight: 700;
+        }
+        footer {
+            background: var(--ifpi-green);
+            padding: 1.2rem 0;
+            margin-top: 1rem;
+            color: white;
+        }
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            font-size: 0.7rem;
+        }
+        .reveal { opacity: 0; transform: translateY(12px); transition: 0.4s; }
+        .reveal.visible { opacity: 1; transform: none; }
+        @media (max-width: 880px) {
+            .profile-layout { grid-template-columns: 1fr; }
+            .container { padding: 0 1.2rem; }
+            .menu-toggle { display: block; }
+            nav ul {
+                position: absolute; top: 100%; left: 0; right: 0;
+                background: var(--green-dark);
+                flex-direction: column;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.25s;
+            }
+            nav ul.open { max-height: 320px; padding: 0.8rem 0; }
+        }
+        @media (max-width: 580px) {
+            .freq-summary { grid-template-columns: repeat(2,1fr); }
+        }
+        /* Modal de detalhes do dia */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    visibility: hidden;
+    opacity: 0;
+    transition: 0.2s;
+}
+.modal-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+.modal-container {
+    background: var(--card-bg);
+    border-radius: 28px;
+    max-width: 460px;
+    width: 90%;
+    box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.modal-header {
+    background: var(--ifpi-green);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.1rem;
+    margin: 0;
+}
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text);
+}
+.modal-row {
+    display: flex;
+    margin-bottom: 0.8rem;
+    font-size: 0.9rem;
+}
+.modal-label {
+    width: 110px;
+    font-weight: 700;
+    color: var(--green);
+}
+.modal-value {
+    flex: 1;
+    font-weight: 500;
+}
+.modal-justify {
+    background: var(--bg2);
+    padding: 0.8rem;
+    border-radius: 14px;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+    </style>
+</head>
+<body>
+<header>
+    <nav class="container">
+        <a class="logo" href="dashboard.html"><i class="fas fa-id-card"></i> SmartPass</a>
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <ul id="navMenu">
+            <li><a href="perfil-aluno.html" class="active"><i class="fas fa-user"></i> Perfil</a></li>
+            <li><a href="acesso-aluno.html"><i class="fas fa-key"></i> Acessos</a></li>
+            <li><a href="#" onclick="logout()" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+            <li><button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button></li>
+        </ul>
+    </nav>
+</header>
+<div class="page-banner">
+    <div class="container">
+        <div class="breadcrumb"><a href="">Início</a> <i class="fas fa-chevron-right"></i> <span>Meu Perfil</span></div>
+        <div class="page-banner-inner">
+            <div class="banner-icon"><i class="fas fa-user-graduate"></i></div>
+            <div><h1>Perfil do Aluno</h1><p>Frequência, métodos de acesso e dados principais</p></div>
+        </div>
+    </div>
+</div>
+<div class="main-content">
+    <div class="container">
+        <div class="profile-layout">
+            <aside class="sidebar">
+                <div class="card reveal" style="text-align:center">
+                    <div class="photo-wrap" id="studentAvatar"></div>
+                    <p class="student-name" id="studentName">---</p>
+                    <p class="student-id" id="studentMatriculaDisplay">---</p>
+                    <div><span class="status-badge"><span class="status-dot" style="width:7px;height:7px;background:var(--green-light);border-radius:50%;display:inline-block;"></span> Ativo</span></div>
+                    <div style="margin-top: 10px;"><span class="matric-tag" id="studentClassTag"><i class="fas fa-tag"></i> ---</span></div>
+                </div>
+                <div class="card reveal">
+                    <div class="card-title"><i class="fas fa-address-card"></i> Contato responsável</div>
+                    <div class="quick-info">
+                        <div class="qi-item"><div class="qi-icon"><i class="fas fa-phone-alt"></i></div><div><div class="qi-label">Telefone</div><div class="qi-val" id="studentPhone">---</div></div></div>
+                        <div class="qi-item"><div class="qi-icon"><i class="fas fa-envelope"></i></div><div><div class="qi-label">E-mail</div><div class="qi-val" id="studentEmail">---</div></div></div>
+                    </div>
+                </div>
+                <div class="card reveal">
+                    <div class="card-title"><i class="fas fa-fingerprint"></i> Métodos de acesso</div>
+                    <div id="metodosContainer"></div>
+                    <div class="last-access" id="accessFooter">
+                        <strong><i class="fas fa-history"></i> Último acesso</strong>
+                        <div><i class="fas fa-calendar-day"></i> <span id="lastAccessDate">---</span></div>
+                        <div><i class="fas fa-map-marker-alt"></i> <span id="lastAccessLocation">Portaria principal</span></div>
+                        <div><i class="fas fa-microchip"></i> <span id="lastAccessMethod">---</span></div>
+                    </div>
+                </div>
+                <div class="card reveal">
+                    <div class="card-title"><i class="fas fa-graduation-cap"></i> Vínculo acadêmico</div>
+                    <div class="academic-info">
+                        <div class="academic-row"><span class="academic-label">Curso:</span><span class="academic-value" id="cursoNome">---</span></div>
+                        <div class="academic-row"><span class="academic-label">Ano/Turma:</span><span class="academic-value" id="cursoAno">---</span></div>
+                        <div class="academic-row"><span class="academic-label">Início:</span><span class="academic-value" id="courseStart">---</span></div>
+                        <div class="academic-row"><span class="academic-label">Término previsto:</span><span class="academic-value" id="courseEnd">---</span></div>
+                        <div class="academic-row"><span class="academic-label">Campus:</span><span class="academic-value" id="courseCampus">IFPI — Pedro II</span></div>
+                    </div>
+                    <div style="margin-top: 8px; text-align:center;">
+                        <span class="course-badge" id="cursoEmojiBadge">📚</span>
+                    </div>
+                </div>
+            </aside>
+            <div class="main-col">
+                <div class="card calendar-card reveal">
+                    <div class="card-title" style="justify-content: space-between;">
+                        <span><i class="fas fa-calendar-check"></i> Calendário de Frequência</span>
+                        <span class="sync-tag" style="font-size:0.6rem; background:var(--bg2); padding:0.2rem 0.5rem; border-radius:30px;"><i class="fas fa-database"></i> tempo real</span>
+                    </div>
+                    <div class="calendar-nav">
+                        <span class="month-title" id="monthTitle">Carregando...</span>
+                        <div><button class="month-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <button class="month-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button></div>
+                    </div>
+                    <div class="weekdays"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                    <div class="cal-legend">
+                        <span><span class="leg-dot presente"></span> Presente</span>
+                        <span><span class="leg-dot falta"></span> Falta</span>
+                        <span><span class="leg-dot incompleto"></span> Incompleto</span>
+                        <span><span class="leg-dot feriado"></span> Feriado/Recesso</span>
+                        <span><span class="leg-dot" style="background:var(--bg2); border:1px solid var(--border);"></span> Dia letivo</span>
+                        <span><span class="leg-dot weekend"></span> Fim de semana</span>
+                    </div>
+                    <div class="freq-summary">
+                        <div class="freq-item"><span class="freq-num green" id="presentCount">—</span><span class="freq-label">PRESENÇAS</span></div>
+                        <div class="freq-item"><span class="freq-num red" id="absentCount">—</span><span class="freq-label">FALTAS</span></div>
+                        <div class="freq-item"><span class="freq-num muted" id="totalSchoolDays">—</span><span class="freq-label">DIAS LETIVOS</span></div>
+                        <div class="freq-item"><span class="freq-num green" id="freqPercent">—</span><span class="freq-label">APROVEIT.</span></div>
+                    </div>
+                    <p style="font-size:0.6rem; text-align:center; margin-top: 0.6rem;"><i class="fas fa-info-circle"></i> Clique nos dias amarelos (incompletos) para ver detalhes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<footer>
+    <div class="container">
+        <div class="footer-inner">
+            <div><i class="fas fa-id-card"></i> SmartPass</div>
+            <p>© 2026 · Sistema de frequência inteligente</p>
+            <ul style="display:flex; gap:1rem; list-style:none;"><li><a href="#" style="color:#eee;">Privacidade</a></li><li><a href="#" style="color:#eee;">Suporte</a></li></ul>
+        </div>
+    </div>
+</footer>
+<!-- Modal de detalhes do dia -->
+<div id="modalDetalhes" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3><i class="fas fa-calendar-day"></i> Detalhes do dia</h3>
+            <button class="modal-close" onclick="fecharModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- preenchido via js -->
+        </div>
+    </div>
+</div>
+<script>
+    function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+function logout() { localStorage.removeItem('currentUser'); sessionStorage.clear(); window.location.href = 'login.html'; }
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('darkMode','false'); document.getElementById('themeIcon').className = 'fas fa-moon'; }
+    else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('darkMode','true'); document.getElementById('themeIcon').className = 'fas fa-sun'; }
+}
+if(localStorage.getItem('darkMode') === 'true') document.getElementById('themeIcon').className = 'fas fa-sun';
+
+const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+let alunoAtual = null;
+let dadosPresencas = [];
+let currentDate = new Date();
+let calendarioEventos = [];
+let sabadosConfigMap = new Map();   // chave: data (YYYY-MM-DD) -> objeto de configuração
+const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function getCurrentUser() {
+    const userStr = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+    if (!userStr) { window.location.href = 'login.html'; return null; }
+    try { return JSON.parse(userStr); } catch(e) { return null; }
+}
+
+function formatDate(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function isWeekend(dow) { return dow === 0 || dow === 6; }
+
+// Constrói nome da turma no formato que o backend espera (ex: "3° Ano Informatica")
+function getTurmaCompleta() {
+    if (!alunoAtual) return null;
+    let ano = (alunoAtual.ano || '').trim();
+    let curso = (alunoAtual.curso || '').trim();
+    if (!ano || !curso) return null;
+    if (!ano.includes('Ano')) {
+        ano = ano.replace(/[º°]/, '°');
+        return `${ano} Ano ${curso}`;
+    }
+    return `${ano} ${curso}`;
+}
+
+// ========== FUNÇÃO CORRIGIDA (SEM DUPLICAÇÃO) ==========
+async function carregarSabadosConfig(mes, ano) {
+    const turma = getTurmaCompleta();
+    let url = `/api/sabados?mes=${mes}&ano=${ano}`;
+    if (turma) url += `&turma=${encodeURIComponent(turma)}`;
+    console.log('[SÁBADOS] URL:', url);
+    try {
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+        console.log('[SÁBADOS] Resposta:', data);
+        if (data.success && data.configs) {
+            sabadosConfigMap.clear();
+            data.configs.forEach(c => {
+                const dataStr = c.data.slice(0,10);
+                sabadosConfigMap.set(dataStr, c);
+            });
+            console.log('[SÁBADOS] Mapa:', [...sabadosConfigMap.entries()]);
+        } else {
+            sabadosConfigMap.clear();
+        }
+    } catch(e) {
+        console.error('Erro ao carregar configurações de sábados:', e);
+        sabadosConfigMap.clear();
+    }
+}
+
+async function carregarCalendario() {
+    try {
+        const res = await fetch('/api/calendario', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) calendarioEventos = data.eventos;
+        else calendarioEventos = [];
+    } catch(e) { calendarioEventos = []; }
+}
+
+async function carregarDadosAluno() {
+    const user = getCurrentUser();
+    if (!user) return;
+    try {
+        const resp = await fetch('/api/aluno/perfil', { credentials: 'include' });
+        if(resp.ok){
+            const data = await resp.json();
+            if(data.sucesso && data.aluno){
+                alunoAtual = data.aluno;
+                await carregarCalendario();
+                await carregarSabadosConfig(currentDate.getMonth()+1, currentDate.getFullYear());
+                atualizarPerfilUI();
+                await carregarPresencas();
+                await carregarUltimoAcesso();
+                return;
+            }
+        }
+        await fallbackAlunos(user);
+    } catch(e) { await fallbackAlunos(user); }
+}
+
+async function fallbackAlunos(user){
+    try {
+        const resp = await fetch('/api/alunos', { credentials: 'include' });
+        if(resp.ok){
+            const lista = await resp.json();
+            alunoAtual = lista.find(a => a.name === user.name);
+            if(alunoAtual){
+                await carregarCalendario();
+                await carregarSabadosConfig(currentDate.getMonth()+1, currentDate.getFullYear());
+                atualizarPerfilUI();
+                await carregarPresencas();
+                await carregarUltimoAcesso();
+            } else renderCalendar();
+        }
+    } catch(err){ renderCalendar(); }
+}
+
+function atualizarPerfilUI(){
+    if(!alunoAtual) return;
+    const nome = alunoAtual.name || alunoAtual.nome || 'Estudante';
+    const matricula = alunoAtual.matricula || '****';
+    const ano = alunoAtual.ano || '2025';
+    const curso = alunoAtual.curso || 'Técnico Integrado';
+    document.getElementById('studentName').textContent = nome;
+    document.getElementById('studentMatriculaDisplay').innerHTML = `Matrícula #${matricula}`;
+    document.getElementById('studentClassTag').innerHTML = `<i class="fas fa-tag"></i> ${ano} · ${curso}`;
+    document.getElementById('studentPhone').textContent = alunoAtual.responsavel_telefone || 'Não informado';
+    document.getElementById('studentEmail').textContent = alunoAtual.responsavel_email || alunoAtual.email || 'não informado';
+    const avatarDiv = document.getElementById('studentAvatar');
+    if(alunoAtual.foto) avatarDiv.style.backgroundImage = `url('${alunoAtual.foto}')`;
+    else avatarDiv.style.backgroundImage = `url('https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=1d4903&color=fff&rounded=true')`;
+    let tipo = alunoAtual.tipo_acesso || 'RFID';
+    let metodosHtml = '';
+    if(tipo === 'RFID' || tipo === 'AMBOS') metodosHtml += `<div class="method-item active"><div class="method-icon-wrap"><i class="fas fa-id-card"></i></div><div><div class="method-name">Cartão RFID</div><div class="method-sub">Ativo</div></div><i class="fas fa-check-circle" style="color:var(--green);"></i></div>`;
+    if(tipo === 'BIO' || tipo === 'AMBOS') metodosHtml += `<div class="method-item active"><div class="method-icon-wrap"><i class="fas fa-fingerprint"></i></div><div><div class="method-name">Biometria</div><div class="method-sub">Digital registrada</div></div><i class="fas fa-check-circle" style="color:var(--green);"></i></div>`;
+    if(!metodosHtml) metodosHtml = `<div class="method-item"><div class="method-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div><div>Nenhum método cadastrado</div></div>`;
+    document.getElementById('metodosContainer').innerHTML = metodosHtml;
+    document.getElementById('cursoNome').textContent = curso;
+    document.getElementById('cursoAno').textContent = ano;
+    document.getElementById('courseStart').textContent = alunoAtual.inicio_curso || 'Fev/2025';
+    document.getElementById('courseEnd').textContent = alunoAtual.fim_curso || 'Dez/2027';
+    document.getElementById('courseCampus').textContent = 'IFPI — Campus Pedro II';
+    let emoji = curso.includes('Inform') ? '💻' : (curso.includes('Admin') ? '📊' : '📚');
+    document.getElementById('cursoEmojiBadge').innerHTML = emoji + ' ' + curso;
+}
+
+async function carregarPresencas(){
+    try {
+        const resp = await fetch('/api/minhas-presencas', { credentials: 'include' });
+        if(resp.ok){
+            const data = await resp.json();
+            dadosPresencas = (data.sucesso && data.presencas) ? data.presencas : [];
+        } else dadosPresencas = [];
+    } catch(e){ dadosPresencas = []; }
+    renderCalendar();
+}
+
+async function carregarUltimoAcesso(){
+    if(!alunoAtual) return;
+    try {
+        const resp = await fetch('/api/minhas-presencas', { credentials: 'include' });
+        if(resp.ok){
+            const data = await resp.json();
+            const acessos = data.presencas || [];
+            if(acessos.length){
+                const ultimo = acessos[0];
+                const dataAcc = ultimo.data ? new Date(ultimo.data+'T00:00:00').toLocaleDateString('pt-BR') : '---';
+                document.getElementById('lastAccessDate').textContent = `${dataAcc} ${ultimo.entrada ? 'às '+ultimo.entrada : ''}`;
+                document.getElementById('lastAccessMethod').textContent = ultimo.tipo_sistema === 'BIO' ? 'Biometria' : 'RFID';
+            } else { document.getElementById('lastAccessDate').textContent = 'Nenhum acesso'; }
+        }
+    } catch(err){}
+}
+
+function showTooltip(e, text){
+    if(!window.customTooltip){
+        const div = document.createElement('div');
+        div.style.cssText = 'position:fixed;background:#111;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;z-index:9999;pointer-events:none;max-width:260px;text-align:center;white-space:normal;';
+        document.body.appendChild(div);
+        window.customTooltip = div;
+    }
+    window.customTooltip.textContent = text;
+    window.customTooltip.style.left = (e.clientX+12)+'px';
+    window.customTooltip.style.top = (e.clientY-28)+'px';
+    window.customTooltip.style.opacity = '1';
+}
+function hideTooltip(){ if(window.customTooltip) window.customTooltip.style.opacity = '0'; }
+
+// ========== FUNÇÃO DO MODAL CORRIGIDA (SEM DUPLICAÇÃO) ==========
+function abrirModalDetalhes(dataStr, cfg, registrosDia) {
+    const modal = document.getElementById('modalDetalhes');
+    if (!modal) return;
+    const body = document.getElementById('modalBody');
+    // Formata a data manualmente sem usar new Date()
+    const partes = dataStr.split('-');
+    const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    let html = `<div class="modal-row"><div class="modal-label">📅 Data</div><div class="modal-value">${dataFormatada}</div></div>`;
+    if (cfg) {
+        const tipoMap = { 'aula':'📘 Aula normal', 'prova':'📝 Prova', 'simulado':'📋 Simulado', 'recesso':'🏖️ Recesso', 'nao_letivo':'🚫 Não letivo' };
+        html += `<div class="modal-row"><div class="modal-label">📌 Tipo</div><div class="modal-value">${tipoMap[cfg.tipo] || cfg.tipo}</div></div>`;
+        if (cfg.horario_entrada) html += `<div class="modal-row"><div class="modal-label">⏰ Entrada</div><div class="modal-value">${cfg.horario_entrada.slice(0,5)} (permitida 1h antes)</div></div>`;
+        if (cfg.horario_saida) html += `<div class="modal-row"><div class="modal-label">🚪 Saída</div><div class="modal-value">${cfg.horario_saida.slice(0,5)}</div></div>`;
+        if (cfg.bloqueio_entrada) html += `<div class="modal-row"><div class="modal-label">🚫 Bloqueio entrada</div><div class="modal-value">Após ${cfg.bloqueio_entrada.slice(0,5)}</div></div>`;
+        if (cfg.justificativa) html += `<div class="modal-justify"><i class="fas fa-info-circle"></i> ${cfg.justificativa}</div>`;
+    } else {
+        html += `<div class="modal-row"><div class="modal-value">Sem informações especiais para este dia.</div></div>`;
+    }
+    if (registrosDia && registrosDia.length) {
+        const reg = registrosDia[0];
+        html += `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:8px;"><strong><i class="fas fa-clock"></i> Seu registro</strong></div>`;
+        html += `<div class="modal-row"><div class="modal-label">Entrada</div><div class="modal-value">${reg.entrada || '—'}</div></div>`;
+        html += `<div class="modal-row"><div class="modal-label">Saída</div><div class="modal-value">${reg.saida || '—'}</div></div>`;
+        html += `<div class="modal-row"><div class="modal-label">Status</div><div class="modal-value">${reg.status || '—'}</div></div>`;
+    }
+    body.innerHTML = html;
+    modal.classList.add('active');
+}
+function fecharModal() {
+    document.getElementById('modalDetalhes').classList.remove('active');
+}
+
+function renderCalendar(){
+    const y = currentDate.getFullYear();
+    const m = currentDate.getMonth();
+    carregarSabadosConfig(m+1, y).then(() => {
+        document.getElementById('monthTitle').textContent = `${monthNames[m]} ${y}`;
+        const firstDay = new Date(y,m,1).getDay();
+        const lastDay = new Date(y,m+1,0).getDate();
+        const prevLast = new Date(y,m,0).getDate();
+        const hoje = new Date();
+        const hojeStr = formatDate(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        let cadastroStr = null;
+        if(alunoAtual && alunoAtual.data_cadastro){
+            const dc = new Date(alunoAtual.data_cadastro);
+            cadastroStr = formatDate(dc.getFullYear(), dc.getMonth(), dc.getDate());
+        }
+        let presentCount = 0, absentCount = 0, totalSchoolDays = 0;
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        for(let i = firstDay-1; i>=0; i--){
+            const div = document.createElement('div'); div.className = 'cal-day other-month'; div.innerHTML = `<span class="day-num">${prevLast-i}</span>`; grid.appendChild(div);
+        }
+        for(let d=1; d<=lastDay; d++){
+            const dow = new Date(y,m,d).getDay();
+            const dataStr = formatDate(y,m,d);
+            const futuro = dataStr > hojeStr;
+            const antesCadastro = cadastroStr && dataStr < cadastroStr;
+            const div = document.createElement('div'); div.className = 'cal-day';
+            const evento = calendarioEventos.find(e => e.data === dataStr);
+            const eFeriado = evento && ['feriado_nacional','feriado_local','ponto_facultativo','recesso'].includes(evento.tipo);
+            const sabadoCfg = sabadosConfigMap.get(dataStr);
+            const isSabadoLetivo = sabadoCfg && sabadoCfg.tipo !== 'nao_letivo' && sabadoCfg.tipo !== 'recesso';
+            // Se for feriado, prioridade total
+            if (eFeriado) {
+                div.classList.add('feriado');
+                div.innerHTML = `<span class="day-num">${d}</span><span class="day-icon">🎉</span>`;
+                div.title = evento.descricao || 'Feriado/Ponto facultativo';
+            }
+            // Sábado não letivo ou sem configuração -> fim de semana
+            else if (dow === 6 && !isSabadoLetivo) {
+                div.classList.add('weekend');
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            // Domingo sempre fim de semana
+            else if (dow === 0) {
+                div.classList.add('weekend');
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            // Dias futuros ou anteriores ao cadastro (exceto sábados letivos)
+            else if ((futuro || antesCadastro) && !(dow === 6 && isSabadoLetivo)) {
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            else {
+                // Dia letivo normal (segunda a sexta, ou sábado letivo)
+                totalSchoolDays++;
+                const registrosDia = dadosPresencas.filter(p => (typeof p.data === 'string' ? p.data.slice(0,10) : '') === dataStr);
+                let cls = 'falta', icon = '✗', titulo = 'Falta — sem registro';
+                
+                // NOVA LÓGICA: sábado letivo futuro = informativo; passado = normal
+                if (isSabadoLetivo && futuro) {
+                    // Sábado letivo no futuro: ícone de informação, sem contar falta
+                    cls = '';
+                    icon = 'ℹ️';
+                    titulo = `📅 Sábado letivo — consulte os detalhes`;
+                    div.classList.add('cal-day');
+                } else if(registrosDia.length > 0){
+                    const reg = registrosDia[registrosDia.length-1];
+                    const temEntrada = reg.entrada && reg.entrada !== '-';
+                    const temSaida = reg.saida && reg.saida !== '-';
+                    const status = (reg.status || '').toUpperCase();
+                    if((status === 'PRESENTE' || status === 'SAIU') && temEntrada && temSaida){
+                        cls = 'presente'; icon = '✓'; titulo = `Presença completa (${reg.entrada} - ${reg.saida})`; presentCount++;
+                    } else if(temEntrada && !temSaida){
+                        cls = 'incompleto'; icon = '⚠'; titulo = `Entrada ${reg.entrada}, saída não registrada`; presentCount++;
+                    } else if(!temEntrada && temSaida){
+                        cls = 'incompleto'; icon = '⚠'; titulo = `Saída às ${reg.saida} sem entrada`;
+                    } else if(status === 'PRESENTE'){
+                        cls = 'presente'; icon = '✓'; titulo = 'Presença validada'; presentCount++;
+                    } else { absentCount++; }
+                } else { 
+                    absentCount++; 
+                }
+                
+                if (cls) div.classList.add(cls);
+                div.innerHTML = `<span class="day-num">${d}</span><span class="day-icon">${icon}</span>`;
+                div.style.cursor = 'pointer';
+                
+                if (sabadoCfg && isSabadoLetivo && !futuro) {
+                    // Tooltip para sábado letivo passado (já ocorreu)
+                    const tipoExtrato = { 'aula':'Aula', 'prova':'Prova', 'simulado':'Simulado' }[sabadoCfg.tipo] || sabadoCfg.tipo;
+                    const horaEntrada = sabadoCfg.horario_entrada ? sabadoCfg.horario_entrada.slice(0,5) : '08:00';
+                    const horaSaida = sabadoCfg.horario_saida ? sabadoCfg.horario_saida.slice(0,5) : '—';
+                    titulo = `${tipoExtrato} (entrada ${horaEntrada}, saída ${horaSaida})`;
+                    if (sabadoCfg.justificativa) titulo += ` | Obs: ${sabadoCfg.justificativa.slice(0,40)}`;
+                }
+                div.addEventListener('mouseenter', (e) => showTooltip(e, titulo));
+                div.addEventListener('mousemove', (e) => { if(window.customTooltip){ window.customTooltip.style.left = (e.clientX+12)+'px'; window.customTooltip.style.top = (e.clientY-28)+'px'; } });
+                div.addEventListener('mouseleave', hideTooltip);
+                
+                div.addEventListener('click', (function(data, cfg, registros) {
+                    return function() {
+                        abrirModalDetalhes(data, cfg, registros);
+                    };
+                })(dataStr, sabadoCfg, dadosPresencas.filter(p => (typeof p.data === 'string' ? p.data.slice(0,10) : '') === dataStr)));
+            }
+            grid.appendChild(div);
+        }
+        const remaining = 42 - (firstDay + lastDay);
+        for(let i=1; i<=remaining; i++){ const div = document.createElement('div'); div.className = 'cal-day other-month'; div.innerHTML = `<span class="day-num">${i}</span>`; grid.appendChild(div); }
+        document.getElementById('presentCount').textContent = presentCount;
+        document.getElementById('absentCount').textContent = absentCount;
+        document.getElementById('totalSchoolDays').textContent = totalSchoolDays;
+        const pct = totalSchoolDays ? Math.round((presentCount/totalSchoolDays)*100) : 0;
+        const freqEl = document.getElementById('freqPercent');
+        freqEl.textContent = pct+'%';
+        freqEl.style.color = pct >= 75 ? 'var(--green)' : '#dc3545';
+    });
+}    const y = currentDate.getFullYear();
+    const m = currentDate.getMonth();
+    carregarSabadosConfig(m+1, y).then(() => {
+        document.getElementById('monthTitle').textContent = `${monthNames[m]} ${y}`;
+        const firstDay = new Date(y,m,1).getDay();
+        const lastDay = new Date(y,m+1,0).getDate();
+        const prevLast = new Date(y,m,0).getDate();
+        const hoje = new Date();
+        const hojeStr = formatDate(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        let cadastroStr = null;
+        if(alunoAtual && alunoAtual.data_cadastro){
+            const dc = new Date(alunoAtual.data_cadastro);
+            cadastroStr = formatDate(dc.getFullYear(), dc.getMonth(), dc.getDate());
+        }
+        let presentCount = 0, absentCount = 0, totalSchoolDays = 0;
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        for(let i = firstDay-1; i>=0; i--){
+            const div = document.createElement('div'); div.className = 'cal-day other-month'; div.innerHTML = `<span class="day-num">${prevLast-i}</span>`; grid.appendChild(div);
+        }
+        for(let d=1; d<=lastDay; d++){
+            const dow = new Date(y,m,d).getDay();
+            const dataStr = formatDate(y,m,d);
+            const futuro = dataStr > hojeStr;
+            const antesCadastro = cadastroStr && dataStr < cadastroStr;
+            const div = document.createElement('div'); div.className = 'cal-day';
+            const evento = calendarioEventos.find(e => e.data === dataStr);
+            const eFeriado = evento && ['feriado_nacional','feriado_local','ponto_facultativo','recesso'].includes(evento.tipo);
+            const sabadoCfg = sabadosConfigMap.get(dataStr);
+            const isSabadoLetivo = sabadoCfg && sabadoCfg.tipo !== 'nao_letivo' && sabadoCfg.tipo !== 'recesso';
+            // Se for feriado, prioridade total
+            if (eFeriado) {
+                div.classList.add('feriado');
+                div.innerHTML = `<span class="day-num">${d}</span><span class="day-icon">🎉</span>`;
+                div.title = evento.descricao || 'Feriado/Ponto facultativo';
+            }
+            // Sábado não letivo ou sem configuração -> fim de semana
+            else if (dow === 6 && !isSabadoLetivo) {
+                div.classList.add('weekend');
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            // Domingo sempre fim de semana
+            else if (dow === 0) {
+                div.classList.add('weekend');
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            // Dias futuros ou anteriores ao cadastro (exceto sábados letivos)
+            else if ((futuro || antesCadastro) && !(dow === 6 && isSabadoLetivo)) {
+                div.innerHTML = `<span class="day-num">${d}</span>`;
+            }
+            else {
+                totalSchoolDays++;
+                const registrosDia = dadosPresencas.filter(p => (typeof p.data === 'string' ? p.data.slice(0,10) : '') === dataStr);
+                let cls = 'falta', icon = '✗', titulo = 'Falta — sem registro';
+                
+                const isFuturo = dataStr > hojeStr;
+                if (isSabadoLetivo && (isFuturo || registrosDia.length === 0)) {
+                    // Dia informativo: neutro, sem cor de falta
+                    cls = '';
+                    icon = 'ℹ️';
+                    titulo = `📅 Sábado letivo — consulte os detalhes`;
+                    div.classList.add('cal-day'); // mantém o estilo base
+                } else if(registrosDia.length > 0){
+                    const reg = registrosDia[registrosDia.length-1];
+                    const temEntrada = reg.entrada && reg.entrada !== '-';
+                    const temSaida = reg.saida && reg.saida !== '-';
+                    const status = (reg.status || '').toUpperCase();
+                    if((status === 'PRESENTE' || status === 'SAIU') && temEntrada && temSaida){
+                        cls = 'presente'; icon = '✓'; titulo = `Presença completa (${reg.entrada} - ${reg.saida})`; presentCount++;
+                    } else if(temEntrada && !temSaida){
+                        cls = 'incompleto'; icon = '⚠'; titulo = `Entrada ${reg.entrada}, saída não registrada`; presentCount++;
+                    } else if(!temEntrada && temSaida){
+                        cls = 'incompleto'; icon = '⚠'; titulo = `Saída às ${reg.saida} sem entrada`;
+                    } else if(status === 'PRESENTE'){
+                        cls = 'presente'; icon = '✓'; titulo = 'Presença validada'; presentCount++;
+                    } else { absentCount++; }
+                } else { 
+                    absentCount++; 
+                }
+                
+                if (cls) div.classList.add(cls);
+                div.innerHTML = `<span class="day-num">${d}</span><span class="day-icon">${icon}</span>`;
+                div.style.cursor = 'pointer';
+                
+                if (sabadoCfg && isSabadoLetivo) {
+                    const tipoExtrato = { 'aula':'Aula', 'prova':'Prova', 'simulado':'Simulado' }[sabadoCfg.tipo] || sabadoCfg.tipo;
+                    const horaEntrada = sabadoCfg.horario_entrada ? sabadoCfg.horario_entrada.slice(0,5) : '08:00';
+                    const horaSaida = sabadoCfg.horario_saida ? sabadoCfg.horario_saida.slice(0,5) : '—';
+                    titulo = `${tipoExtrato} (entrada ${horaEntrada}, saída ${horaSaida})`;
+                    if (sabadoCfg.justificativa) titulo += ` | Obs: ${sabadoCfg.justificativa.slice(0,40)}`;
+                }
+                div.addEventListener('mouseenter', (e) => showTooltip(e, titulo));
+                div.addEventListener('mousemove', (e) => { if(window.customTooltip){ window.customTooltip.style.left = (e.clientX+12)+'px'; window.customTooltip.style.top = (e.clientY-28)+'px'; } });
+                div.addEventListener('mouseleave', hideTooltip);
+                
+                div.addEventListener('click', (function(data, cfg, registros) {
+                    return function() {
+                        abrirModalDetalhes(data, cfg, registros);
+                    };
+                })(dataStr, sabadoCfg, dadosPresencas.filter(p => (typeof p.data === 'string' ? p.data.slice(0,10) : '') === dataStr)));
+            }
+            grid.appendChild(div);
+        }
+        const remaining = 42 - (firstDay + lastDay);
+        for(let i=1; i<=remaining; i++){ const div = document.createElement('div'); div.className = 'cal-day other-month'; div.innerHTML = `<span class="day-num">${i}</span>`; grid.appendChild(div); }
+        document.getElementById('presentCount').textContent = presentCount;
+        document.getElementById('absentCount').textContent = absentCount;
+        document.getElementById('totalSchoolDays').textContent = totalSchoolDays;
+        const pct = totalSchoolDays ? Math.round((presentCount/totalSchoolDays)*100) : 0;
+        const freqEl = document.getElementById('freqPercent');
+        freqEl.textContent = pct+'%';
+        freqEl.style.color = pct >= 75 ? 'var(--green)' : '#dc3545';
+    });
+
+function atualizarBannerAviso() {
+    const hoje = new Date();
+    const hojeStr = formatDate(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    const cfg = sabadosConfigMap.get(hojeStr);
+    let bannerDiv = document.getElementById('sabadoAvisoBanner');
+    if (!bannerDiv) {
+        bannerDiv = document.createElement('div');
+        bannerDiv.id = 'sabadoAvisoBanner';
+        bannerDiv.style.cssText = 'background:var(--incomplete-bg); border-left:4px solid var(--incomplete-border); padding:0.5rem 1rem; border-radius:12px; margin-bottom:1rem; font-size:0.8rem; display:flex; align-items:center; gap:8px;';
+        const calendarCard = document.querySelector('.calendar-card');
+        if (calendarCard) calendarCard.insertBefore(bannerDiv, calendarCard.firstChild);
+    }
+    if (cfg && (cfg.tipo === 'prova' || cfg.tipo === 'simulado')) {
+        const tipoTexto = cfg.tipo === 'prova' ? '📝 Prova' : '📋 Simulado';
+        const entrada = cfg.horario_entrada ? cfg.horario_entrada.slice(0,5) : '08:00';
+        const saida = cfg.horario_saida ? cfg.horario_saida.slice(0,5) : '—';
+        bannerDiv.innerHTML = `<i class="fas fa-bell"></i> <strong>${tipoTexto} hoje!</strong> Horário de entrada: ${entrada} (permitido 1h antes). Saída: ${saida}.`;
+        bannerDiv.style.display = 'flex';
+    } else {
+        bannerDiv.style.display = 'none';
+    }
+}
+
+document.getElementById('prevMonth')?.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); });
+document.getElementById('nextMonth')?.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); });
+
+const originalRender = renderCalendar;
+window.renderCalendar = function() {
+    originalRender();
+    setTimeout(atualizarBannerAviso, 50);
+};
+renderCalendar = window.renderCalendar;
+
+setInterval(async () => { await carregarPresencas(); }, 55000);
+if(getCurrentUser()) carregarDadosAluno();
+</script>
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - SmartPass IFPI</title>
+    
+    <script>
+        (function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            const savedFontSize = localStorage.getItem('fontSize') || '16';
+            if (savedDarkMode) document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.fontSize = savedFontSize + 'px';
+        })();
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #1a5c06;
+            --green-dark: #0f3a03;
+            --green-mid: #237a08;
+            --green-light: #4caf50;
+            --yellow: #f9d923;
+            --ifpi-green: #1d4903;
+            --ifpi-yellow: #ffeb3b;
+            --bg: #f5f7f5;
+            --bg2: #eaf3e8;
+            --text: #000000;
+            --text-muted: #000000;
+            --card-bg: #ffffff;
+            --border: rgba(26, 92, 6, 0.704);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg: #111a10;
+            --bg2: #182216;
+            --text: #d4e8d0;
+            --text-muted: #7aaa73;
+            --card-bg: #1e2d1c;
+            --border: rgba(76,175,80,0.15);
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: var(--transition);
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 1.1rem 0;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Merriweather', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo i { color: var(--yellow); }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        nav ul li a {
+            color: rgba(255,255,255,0.88);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav ul li a:hover {
+            color: var(--ifpi-yellow);
+        }
+
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--ifpi-yellow);
+            transition: width 0.3s ease;
+        }
+
+        nav ul li a:hover::after, nav ul li a.active::after {
+            width: 100%;
+        }
+        
+        nav ul li a.active {
+            color: var(--yellow);
+        }
+
+        .nav-btn {
+            background: rgba(249,217,35,0.18) !important;
+            border: 1.5px solid rgba(249,217,35,0.45) !important;
+            color: var(--yellow) !important;
+            padding: 0.42rem 1.1rem !important;
+            border-radius: 8px !important;
+        }
+
+        .nav-btn:hover {
+            background: var(--yellow) !important;
+            color: var(--green-dark) !important;
+        }
+        .nav-btn::after { display: none !important; }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.12);
+            border: none;
+            color: white;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-left: 0.5rem;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .header-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .header-user-profile:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header-user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: var(--yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ifpi-green);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: white;
+        }
+
+        .header-user-role {
+            font-size: 0.75rem;
+            color: var(--yellow);
+            text-transform: capitalize;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            nav ul {
+                position: absolute;
+                top: 100%; left: 0; right: 0;
+                background: var(--green-dark);
+                flex-direction: column;
+                align-items: stretch;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            nav ul.open {
+                max-height: 460px;
+                padding: 0.5rem 0;
+            }
+            nav ul li a {
+                display: block;
+                padding: 0.7rem 1.5rem;
+                border-radius: 0;
+            }
+            nav ul li a.nav-btn {
+                margin: 0.5rem 1rem;
+                border-radius: 8px;
+                text-align: center;
+            }
+            .header-user-profile {
+                border-radius: 8px;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ===== CONTEÚDO DA PÁGINA ===== */
+        .page-title {
+            background: var(--card-bg);
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: var(--transition);
+        }
+
+        .page-title h1 {
+            color: var(--ifpi-green);
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+
+        [data-theme="dark"] .page-title h1 {
+            color: #4caf50;
+        }
+
+        .page-title p {
+            color: var(--text);
+            opacity: 0.7;
+        }
+
+        .config-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: var(--transition);
+        }
+
+        .config-section h2 {
+            color: var(--ifpi-green);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        [data-theme="dark"] .config-section h2 {
+            color: #4caf50;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            font-weight: 500;
+        }
+
+        .config-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        [data-theme="dark"] .config-description {
+            color: #999;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--ifpi-green);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .btn {
+            background: var(--ifpi-green);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--green-mid);
+        }
+
+        select {
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            color: var(--text);
+        }
+
+        input {
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="container">
+            <a class="logo" href="dashboard.html">
+                <i class="fas fa-id-card"></i>
+                SmartPass
+            </a>
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul id="navMenu">
+                <li><a href="dashboard.html">Início</a></li>
+                <li><a href="admin.html">Painel Admin</a></li>
+                <li><a href="configuracoes.html" class="active">Configurações</a></li>
+                <li>
+                    <div class="header-user-profile" onclick="window.location.href='perfil-admin.html'">
+                        <div class="header-user-avatar" id="headerUserAvatar">?</div>
+                        <div class="header-user-info">
+                            <span class="header-user-name" id="headerUserName">Carregando...</span>
+                            <span class="header-user-role" id="headerUserRole"></span>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                <li>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-title">
+            <h1><i class="fas fa-cog"></i> Configurações do Sistema</h1>
+            <p>Personalize sua experiência no SmartPass IFPI</p>
+        </div>
+
+        <div class="config-section">
+            <h2><i class="fas fa-palette"></i> Aparência</h2>
+            
+            <div class="config-item">
+                <div>
+                    <div class="config-label">Modo Escuro</div>
+                    <div class="config-description">Ative o tema escuro para melhor visualização noturna</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="config-item">
+                <div>
+                    <div class="config-label">Tamanho da Fonte</div>
+                    <div class="config-description">Ajuste o tamanho do texto</div>
+                </div>
+                <select id="fontSizeSelect" onchange="changeFontSize()">
+                    <option value="14">Pequeno</option>
+                    <option value="16" selected>Normal</option>
+                    <option value="18">Grande</option>
+                    <option value="20">Muito Grande</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h2><i class="fas fa-info-circle"></i> Sobre o Sistema</h2>
+            
+            <div class="config-item">
+                <div>
+                    <div class="config-label">Versão</div>
+                    <div class="config-description">SmartPass IFPI v1.0.0</div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div>
+                    <div class="config-label">Desenvolvido por</div>
+                    <div class="config-description">Daniel, Samuel, Ian e Juan</div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div>
+                    <div class="config-label">Orientador</div>
+                    <div class="config-description">Nathan Saraiva</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="salvarConfiguracoes()" style="width: 100%;">
+            <i class="fas fa-save"></i> Salvar Todas as Configurações
+        </button>
+    </div>
+
+    <script>
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let currentUser = null;
+        let syncInterval = null;
+
+        // ==================== FUNÇÕES DE SESSÃO E HEADER ====================
+        async function verificarSessao() {
+            try {
+                const res = await fetch('/api/me', { credentials: 'include' });
+                const data = await res.json();
+                if (!data.success) {
+                    window.location.href = '/login.html';
+                    return false;
+                }
+                currentUser = data.user;
+                return true;
+            } catch (err) {
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        async function loadUserData() {
+            if (!await verificarSessao()) return;
+            
+            // Atualiza o header com os dados do usuário atual
+            document.getElementById('headerUserAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('headerUserName').textContent = currentUser.name;
+            
+            // Traduz o papel (role) para exibição
+            let roleLabel = '';
+            if (currentUser.role === 'admin_master') roleLabel = 'Admin Master';
+            else if (currentUser.role === 'admin_ifpi') roleLabel = 'Admin IFPI';
+            else if (currentUser.role === 'admin_gestao') roleLabel = 'Admin Gestão';
+            else if (currentUser.role === 'guarita') roleLabel = 'Guarita';
+            else if (currentUser.role === 'aluno') roleLabel = 'Aluno';
+            else roleLabel = currentUser.role || 'Usuário';
+            
+            document.getElementById('headerUserRole').textContent = roleLabel;
+        }
+
+        function logout() {
+            fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                .catch(() => {})
+                .finally(() => {
+                    window.location.href = '/login.html';
+                });
+        }
+
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('open');
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('darkMode', 'false');
+                document.getElementById('themeIcon').className = 'fas fa-moon';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('darkMode', 'true');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            }
+        }
+
+        // Inicialização do ícone do tema
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+        }
+
+        // ==================== FUNÇÕES DE CONFIGURAÇÃO ====================
+        function applyTheme() {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        function applyFontSize() {
+            const size = localStorage.getItem('fontSize') || '16';
+            document.documentElement.style.fontSize = size + 'px';
+        }
+
+        function carregarConfiguracoes() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            const fontSize = localStorage.getItem('fontSize') || '16';
+            
+            const toggle = document.getElementById('darkModeToggle');
+            if (toggle) toggle.checked = darkMode;
+            
+            const select = document.getElementById('fontSizeSelect');
+            if (select) select.value = fontSize;
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            localStorage.setItem('darkMode', isDark);
+            applyTheme();
+            mostrarNotificacao('🌙 Modo escuro ' + (isDark ? 'ativado' : 'desativado'));
+        }
+
+        function changeFontSize() {
+            const size = document.getElementById('fontSizeSelect').value;
+            localStorage.setItem('fontSize', size);
+            applyFontSize();
+            mostrarNotificacao('📏 Tamanho da fonte alterado');
+        }
+
+        function salvarConfiguracoes() {
+            const config = {
+                darkMode: document.getElementById('darkModeToggle').checked,
+                fontSize: document.getElementById('fontSizeSelect').value
+            };
+            localStorage.setItem('systemConfig', JSON.stringify(config));
+            alert('✅ Configurações salvas com sucesso!');
+        }
+
+        function mostrarNotificacao(mensagem) {
+            const notif = document.createElement('div');
+            notif.textContent = mensagem;
+            notif.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: var(--ifpi-green);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 5px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notif.remove(), 300);
+            }, 2000);
+        }
+
+        // ==================== SINCRONIZAÇÃO ENTRE ABAS ====================
+        function iniciarSincronizacao() {
+            if (syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/me', { credentials: 'include' });
+                    const data = await res.json();
+                    if (!data.success) {
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    // Se o usuário mudou (nome diferente), recarrega os dados
+                    if (currentUser && data.user.name !== currentUser.name) {
+                        currentUser = data.user;
+                        loadUserData(); // atualiza header
+                    } else if (!currentUser) {
+                        await loadUserData();
+                    }
+                } catch (e) {
+                    console.error('Erro na sincronização:', e);
+                }
+            }, 10000);
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUserData();
+            applyTheme();
+            applyFontSize();
+            carregarConfiguracoes();
+            iniciarSincronizacao();
+
+            // Sincroniza quando a aba ganhar foco
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    loadUserData();
+                }
+            });
+
+            // Fechar menu ao clicar em links
+            document.querySelectorAll('nav ul li a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (link.getAttribute('onclick')) return;
+                    const navMenu = document.getElementById('navMenu');
+                    if (navMenu && navMenu.classList.contains('open')) {
+                        toggleMenu();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
