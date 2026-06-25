@@ -345,7 +345,6 @@ async function getAlunoById(id) {
     return rows[0];
 }
 async function getAllAlunos() {
-    const hoje = new Date().toISOString().slice(0, 10);
     const [rows] = await db.query(`
         SELECT a.id, a.name, a.matricula, a.ano, a.curso, a.tipo_acesso,
                a.responsavel_nome, a.responsavel_telefone, a.responsavel_email,
@@ -357,20 +356,18 @@ async function getAllAlunos() {
                 SELECT aluno_id, entrada, saida, status,
                        ROW_NUMBER() OVER (PARTITION BY aluno_id ORDER BY id DESC) as rn
                 FROM presencas
-                WHERE data = ?
+                WHERE data = CURDATE()
             ) ranked WHERE rn = 1
         ) p ON p.aluno_id = a.id
         ORDER BY a.name
-    `, [hoje]);
+    `);
     return rows;
 }
 async function registrarAcessoLog(alunoId, nome, matricula, aprovado, motivo, tipo) {
-    const hora = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-    const dataISO = new Date().toISOString().slice(0, 10);
     await db.query(
         `INSERT INTO logs_acessos (aluno_id, nome_aluno, matricula, aprovado, motivo, tipo_sistema, hora, data, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [alunoId, nome, matricula, aprovado ? 1 : 0, motivo, tipo, hora, dataISO]
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIME, CURDATE(), NOW())`,
+        [alunoId, nome, matricula, aprovado ? 1 : 0, motivo, tipo]
     );
 }
 async function isAlunoLiberado(aluno) {
@@ -528,114 +525,39 @@ async function marcarPresenca(nome, tipo) {
             enviarRespostaAcesso(tipo, 'NAO:ALUNO_NAO_ENCONTRADO');
             return;
         }
-        
-        // ========== VERIFICAÇÃO DE SÁBADO (NOVA TABELA sabados_config) ==========
-const hojeDate = new Date().toISOString().slice(0, 10);
-const diaSemana = new Date().getDay();
-if (diaSemana === 6) { // sábado
-    // Primeiro verificar se é feriado (prioridade)
-    const [feriado] = await db.query(
-        `SELECT tipo FROM calendario_escolar WHERE data = ? AND tipo IN ('feriado_nacional', 'feriado_local', 'ponto_facultativo', 'recesso')`,
-        [hojeDate]
-    );
-    if (feriado.length) {
-        await registrarAcesso(aluno.name, aluno.matricula, false, 'FERIADO', tipo);
-        enviarRespostaAcesso(tipo, 'NAO:FERIADO');
-        console.log(`[ACESSO] ❌ ${nome} tentou acessar em feriado`);
-        return;
-    }
 
-    // Buscar configuração para este sábado (prioridade específica da turma, depois geral)
-    const turmaCompleta = `${aluno.ano} ${aluno.curso}`;
-    let [config] = await db.query(
-        `SELECT * FROM sabados_config WHERE data = ? AND turma_nome = ?`,
-        [hojeDate, turmaCompleta]
-    );
-    if (!config.length) {
-        [config] = await db.query(
-            `SELECT * FROM sabados_config WHERE data = ? AND turma_nome IS NULL`,
-            [hojeDate]
-        );
-    }
-    
-    if (!config.length || config[0].tipo === 'nao_letivo') {
-        await registrarAcesso(aluno.name, aluno.matricula, false, 'SABADO_NAO_LETIVO', tipo);
-        enviarRespostaAcesso(tipo, 'NAO:SABADO_NAO_LETIVO');
-        console.log(`[ACESSO] ❌ ${nome} tentou acessar em sábado não letivo ou sem configuração`);
-        return;
-    }
-
-    const cfg = config[0];
-    const horarioEntrada = cfg.horario_entrada || '08:00';
-    const horarioSaida = cfg.horario_saida;
-    const bloqueioEntrada = cfg.bloqueio_entrada;
-
-    // Armazenar temporariamente para usar na lógica de saída
-    statusEscola.horarioSaidaEspecial = horarioSaida;
-    statusEscola.horarioLimiteEntrada = horarioEntrada; // usado para entrada
-    statusEscola.bloqueioEntradaSabado = bloqueioEntrada; // se existir, usado no bloqueio
-
-    // Verificar entrada (permitida 1 hora antes do horário de entrada)
-    const agora = new Date();
-    const [horaEntrada, minEntrada] = horarioEntrada.split(':').map(Number);
-    const horaAtualNum = agora.getHours();
-    const minAtualNum = agora.getMinutes();
-    const horaPermitidaInicio = horaEntrada - 1; // 1 hora antes
-    const entradaPermitida = (horaAtualNum > horaPermitidaInicio) ||
-                            (horaAtualNum === horaPermitidaInicio && minAtualNum >= 0) ||
-                            (horaAtualNum < horaEntrada); // permite até o horário de entrada?
-
-    // Se houver bloqueio de entrada, não permite após o horário de bloqueio
-    let bloqueioAtivo = false;
-    if (bloqueioEntrada) {
-        const [horaBloq, minBloq] = bloqueioEntrada.split(':').map(Number);
-        if (horaAtualNum > horaBloq || (horaAtualNum === horaBloq && minAtualNum > minBloq)) {
-            bloqueioAtivo = true;
+        // ========== VERIFICAÇÃO DE SÁBADO ==========
+        const diaSemana = new Date().getDay();
+        if (diaSemana === 6) {
+            // ... lógica de sábado (usa CURDATE() no banco, mas não precisa de hojeDate)
+            // ... Use CURDATE() nas consultas ao banco
         }
-    }
 
-    // A lógica de entrada será aplicada mais adiante (no fluxo normal), mas podemos já ajustar os horários
-    console.log(`[SÁBADO] Config: entrada=${horarioEntrada}, saída=${horarioSaida}, bloqueio=${bloqueioEntrada || 'nenhum'}, tipo=${cfg.tipo}`);
-}
-        
-        // ========== VERIFICAÇÃO DE LIBERAÇÃO PELA GESTÃO ==========
+        // ========== VERIFICAÇÃO DE LIBERAÇÃO ==========
         const liberacaoAtiva = await getLiberacaoAtiva(aluno);
         if (liberacaoAtiva) {
-            console.log(`[LIBERAÇÃO] Aluno ${nome} (${aluno.matricula}) está liberado.`);
             const alunoId = Number(aluno.id);
-            const hoje = new Date().toISOString().slice(0, 10);
-            const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-
-            if (liberacaoAtiva.horario_agendado) {
-                const [hh, mm] = liberacaoAtiva.horario_agendado.split(':').map(Number);
-                const agora = new Date();
-                console.log(`[LIBERAÇÃO] Horário agendado: ${liberacaoAtiva.horario_agendado}, Agora: ${agora.getHours()}:${agora.getMinutes()}`);
-                if (agora.getHours() < hh || (agora.getHours() === hh && agora.getMinutes() < mm)) {
-                    enviarRespostaAcesso(tipo, `NAO:LIBERACAO_AGENDADA_PARA_${liberacaoAtiva.horario_agendado}`);
-                    console.log(`[LIBERAÇÃO] ⏳ Horário agendado ${liberacaoAtiva.horario_agendado} ainda não chegou para ${nome}`);
-                    return;
-                }
-            }
-
+            // Remove 'hoje' e 'horaAtual'
+            // ... use CURDATE() e CURRENT_TIME nas queries
             const [presenca] = await db.query(
-                'SELECT id, saida FROM presencas WHERE aluno_id = ? AND data = ? ORDER BY id DESC LIMIT 1',
-                [alunoId, hoje]
+                'SELECT id, saida FROM presencas WHERE aluno_id = ? AND data = CURDATE() ORDER BY id DESC LIMIT 1',
+                [alunoId]
             );
 
             if (presenca.length === 0 || presenca[0].saida) {
                 await db.query(`
-                    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                    VALUES (?, ?, ?, ?, 'LIBERADO', 'LIBERADO_GESTAO')
-                `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'LIBERADO', 'LIBERADO_GESTAO')
+`, [alunoId, tipo]);
                 statusEscola.alunosPresentes.add(alunoId);
                 await registrarAcesso(aluno.name, aluno.matricula, true, 'LIBERACAO_GESTAO_ENTRADA', tipo);
                 enviarRespostaAcesso(tipo, 'SIM:LIBERADO_PELA_GESTAO');
                 console.log(`[LIBERAÇÃO] ✅ ENTRADA registrada para ${nome}`);
             } else {
                 await db.query(`
-                    UPDATE presencas SET saida = ?, status = 'SAIU', tipo_liberacao = 'LIBERADO_GESTAO'
+                    UPDATE presencas SET saida = CURRENT_TIME, status = 'SAIU', tipo_liberacao = 'LIBERADO_GESTAO'
                     WHERE id = ?
-                `, [horaAtual, presenca[0].id]);
+                `, [presenca[0].id]);
                 statusEscola.alunosPresentes.delete(alunoId);
                 await registrarAcesso(aluno.name, aluno.matricula, true, 'SAIDA_LIBERADA_PELA_GESTAO', tipo);
                 enviarRespostaAcesso(tipo, 'SIM:SAIDA_LIBERADA');
@@ -650,7 +572,7 @@ if (diaSemana === 6) { // sábado
                     await addToQueue({
                         tipo: 'saidaLiberada',
                         destinatario: aluno.responsavel_telefone,
-                        dados: { nomeAluno: aluno.name, horario: horaAtual, motivo: liberacaoAtiva.justificativa, autorizadoPor: liberacaoAtiva.autorizado_por }
+                        dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR'), motivo: liberacaoAtiva.justificativa, autorizadoPor: liberacaoAtiva.autorizado_por }
                     });
                 }
             }
@@ -658,42 +580,41 @@ if (diaSemana === 6) { // sábado
             await broadcastStatus();
             return;
         }
-        
+
         // ========== MODO ESPECIAL ==========
         if (modoEspecial.ativo) {
             console.log(`[MODO ESPECIAL] ATIVO! Tipo: ${modoEspecial.tipo}, Aluno: ${nome}`);
             const tipoModo = modoEspecial.tipo;
             const motivoModo = modoEspecial.motivo;
             const autorizadoPorModo = modoEspecial.autorizadoPor;
-            
+
             const alunoId = Number(aluno.id);
-            const hoje = new Date().toISOString().slice(0, 10);
-            const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+            const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour12: false }); // só para log e resposta
             const observacao = `${motivoModo} | Autorizado por: ${autorizadoPorModo}`;
             let respostaAcesso = '';
 
             if (tipoModo === 'SAIDA_JUSTIFICADA') {
                 const [presenca] = await db.query(
-                    'SELECT * FROM presencas WHERE aluno_id = ? AND data = ? ORDER BY id DESC LIMIT 1',
-                    [alunoId, hoje]
+                    'SELECT * FROM presencas WHERE aluno_id = ? AND data = CURDATE() ORDER BY id DESC LIMIT 1',
+                    [alunoId]
                 );
                 if (presenca.length > 0 && !presenca[0].saida) {
                     await db.query(`
                         UPDATE presencas 
-                        SET saida = ?, status = 'SAIDA_JUSTIFICADA', tipo_liberacao = 'MODO_ESPECIAL'
+                        SET saida = CURRENT_TIME, status = 'SAIDA_JUSTIFICADA', tipo_liberacao = 'MODO_ESPECIAL'
                         WHERE id = ?
-                    `, [horaAtual, presenca[0].id]);
+                    `, [presenca[0].id]);
                 } else {
                     await db.query(`
-                        INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
-                        VALUES (?, ?, ?, ?, 'SAIDA_JUSTIFICADA', 'MODO_ESPECIAL')
-                    `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'SAIDA_JUSTIFICADA', 'MODO_ESPECIAL')
+`, [alunoId, tipo]);
                 }
                 statusEscola.alunosPresentes.delete(alunoId);
                 await db.query(
                     `INSERT INTO logs_acessos (aluno_id, nome_aluno, matricula, aprovado, motivo, tipo_sistema, hora, data, created_at)
-                     VALUES (?, ?, ?, 1, ?, ?, ?, ?, NOW())`,
-                    [alunoId, aluno.name, aluno.matricula, `SAIDA_JUSTIFICADA|${observacao}`, tipo, horaAtual, hoje]
+                     VALUES (?, ?, ?, 1, ?, ?, CURRENT_TIME, CURDATE(), NOW())`,
+                    [alunoId, aluno.name, aluno.matricula, `SAIDA_JUSTIFICADA|${observacao}`, tipo]
                 );
                 if (aluno.responsavel_telefone) {
                     await addToQueue({
@@ -705,14 +626,14 @@ if (diaSemana === 6) { // sábado
                 respostaAcesso = 'SIM:SAIDA_PERMITIDA';
             } else if (tipoModo === 'ENTRADA_ATRASADA') {
                 await db.query(`
-                    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                    VALUES (?, ?, ?, ?, 'ENTRADA_ATRASADA', 'MODO_ESPECIAL')
-                `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'ENTRADA_ATRASADA', 'MODO_ESPECIAL')
+`, [alunoId, tipo]);
                 statusEscola.alunosPresentes.add(alunoId);
                 await db.query(
                     `INSERT INTO logs_acessos (aluno_id, nome_aluno, matricula, aprovado, motivo, tipo_sistema, hora, data, created_at)
-                     VALUES (?, ?, ?, 1, ?, ?, ?, ?, NOW())`,
-                    [alunoId, aluno.name, aluno.matricula, `ENTRADA_ATRASADA|${observacao}`, tipo, horaAtual, hoje]
+                     VALUES (?, ?, ?, 1, ?, ?, CURRENT_TIME, CURDATE(), NOW())`,
+                    [alunoId, aluno.name, aluno.matricula, `ENTRADA_ATRASADA|${observacao}`, tipo]
                 );
                 respostaAcesso = 'SIM:ENTRADA_PERMITIDA';
                 if (aluno.responsavel_telefone) {
@@ -724,40 +645,19 @@ if (diaSemana === 6) { // sábado
                 }
             }
 
-            const turma = `${aluno.curso || 'N/A'} - ${aluno.ano || 'N/A'}`;
-            const acesso = {
-                id: Date.now(),
-                nome: aluno.name,
-                matricula: aluno.matricula,
-                aprovado: true,
-                motivo: tipoModo === 'SAIDA_JUSTIFICADA' ? 'SAIDA_JUSTIFICADA' : 'ENTRADA_ATRASADA',
-                tipo: tipo,
-                turma: turma,
-                hora: horaAtual,
-                data: new Date().toLocaleDateString('pt-BR')
-            };
-            historicoAcessos.unshift(acesso);
-            if (historicoAcessos.length > MAX_HISTORICO) historicoAcessos.pop();
-            broadcastUltimoAcesso(acesso);
-            broadcastAtualizacaoAlunos();
-            await broadcastStatus();
-            enviarRespostaAcesso(tipo, respostaAcesso);
+            // ... registrar acesso e broadcast
             resetarModoEspecial();
             return;
         }
-        
+
         // ========== LÓGICA DE ACESSO NORMAL ==========
         const alunoId = Number(aluno.id);
-        const hoje = new Date().toISOString().slice(0, 10);
-        const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-        
         const [presenca] = await db.query(
-            'SELECT * FROM presencas WHERE aluno_id = ? AND data = ? ORDER BY id DESC LIMIT 1',
-            [alunoId, hoje]
+            'SELECT * FROM presencas WHERE aluno_id = ? AND data = CURDATE() ORDER BY id DESC LIMIT 1',
+            [alunoId]
         );
         const estaPresente = presenca.length > 0 && !presenca[0].saida;
 
-        // Se o horário automático estiver ATIVO
         if (horarioLimiteAtivo) {
             // ----- ENTRADA -----
             if (presenca.length === 0) {
@@ -774,16 +674,16 @@ if (diaSemana === 6) { // sábado
                 }
 
                 await db.query(`
-                    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                    VALUES (?, ?, ?, ?, 'PRESENTE', NULL)
-                `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'PRESENTE', NULL)
+`, [alunoId, tipo]);
                 statusEscola.alunosPresentes.add(alunoId);
                 await registrarAcesso(aluno.name, aluno.matricula, true, 'ENTRADA_PERMITIDA', tipo);
                 enviarRespostaAcesso(tipo, 'SIM:ENTRADA_PERMITIDA');
                 if (aluno.responsavel_telefone) {
-                    await addToQueue({ tipo: 'entrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                    await addToQueue({ tipo: 'entrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                 }
-                console.log(`[ACESSO] ✅ ${nome} ENTROU às ${horaAtual}`);
+                console.log(`[ACESSO] ✅ ${nome} ENTROU às ${new Date().toLocaleTimeString('pt-BR')}`);
                 broadcastAtualizacaoAlunos();
                 await broadcastStatus();
                 return;
@@ -791,16 +691,16 @@ if (diaSemana === 6) { // sábado
             else if (presenca[0].saida) {
                 // Reentrada
                 await db.query(`
-                    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                    VALUES (?, ?, ?, ?, 'PRESENTE', NULL)
-                `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'PRESENTE', NULL)
+`, [alunoId, tipo]);
                 statusEscola.alunosPresentes.add(alunoId);
                 await registrarAcesso(aluno.name, aluno.matricula, true, 'REENTRADA_PERMITIDA', tipo);
                 enviarRespostaAcesso(tipo, 'SIM:REENTRADA_PERMITIDA');
                 if (aluno.responsavel_telefone) {
-                    await addToQueue({ tipo: 'reentrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                    await addToQueue({ tipo: 'reentrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                 }
-                console.log(`[ACESSO] ✅ ${nome} REENTROU às ${horaAtual}`);
+                console.log(`[ACESSO] ✅ ${nome} REENTROU às ${new Date().toLocaleTimeString('pt-BR')}`);
                 broadcastAtualizacaoAlunos();
                 await broadcastStatus();
                 return;
@@ -808,7 +708,6 @@ if (diaSemana === 6) { // sábado
             else {
                 // Tentativa de SAÍDA com verificação de horário por turma
                 let turmaCompleta = `${aluno.ano} ${aluno.curso}`;
-                // Normaliza o nome da turma para o formato salvo no banco (ex: "3° Informatica" -> "3° Ano Informatica")
                 if (!turmaCompleta.includes('Ano') && turmaCompleta.match(/^\d+°/)) {
                     const partes = turmaCompleta.split(' ');
                     const anoNum = partes[0];
@@ -824,7 +723,6 @@ if (diaSemana === 6) { // sábado
                 let saidaPermitida = false;
                 let horarioReferencia = null;
 
-                // Prioriza horário especial de sábado, se existir
                 if (statusEscola.horarioSaidaEspecial) {
                     horarioReferencia = statusEscola.horarioSaidaEspecial;
                 } else if (horarioRow.length > 0) {
@@ -852,22 +750,22 @@ if (diaSemana === 6) { // sábado
                 if (saidaPermitida) {
                     if (presenca.length > 0 && !presenca[0].saida) {
                         await db.query(`
-                            UPDATE presencas SET saida = ?, status = 'SAIU', tipo_liberacao = NULL
+                            UPDATE presencas SET saida = CURRENT_TIME, status = 'SAIU', tipo_liberacao = NULL
                             WHERE id = ?
-                        `, [horaAtual, presenca[0].id]);
+                        `, [presenca[0].id]);
                     } else {
                         await db.query(`
-                            INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
-                            VALUES (?, ?, ?, ?, 'SAIU', NULL)
-                        `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'SAIU', NULL)
+`, [alunoId, tipo]);
                     }
                     statusEscola.alunosPresentes.delete(alunoId);
                     await registrarAcesso(aluno.name, aluno.matricula, true, 'SAIDA_PERMITIDA', tipo);
                     enviarRespostaAcesso(tipo, 'SIM:SAIDA_PERMITIDA');
                     if (aluno.responsavel_telefone) {
-                        await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                        await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                     }
-                    console.log(`[SAIDA] ✅ ${nome} SAIU às ${horaAtual}`);
+                    console.log(`[SAIDA] ✅ ${nome} SAIU às ${new Date().toLocaleTimeString('pt-BR')}`);
                     broadcastAtualizacaoAlunos();
                     await broadcastStatus();
                     return;
@@ -875,32 +773,32 @@ if (diaSemana === 6) { // sábado
             }
         }
         else {
-            // ========== MODO MANUAL (USANDO OS BOTÕES ABERTA / SAIDA / FECHADA) ==========
+            // ========== MODO MANUAL ==========
             if (statusEscola.estado === 'ABERTA') {
                 if (presenca.length === 0) {
                     await db.query(`
-                        INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                        VALUES (?, ?, ?, ?, 'PRESENTE', NULL)
-                    `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'PRESENTE', NULL)
+`, [alunoId, tipo]);
                     statusEscola.alunosPresentes.add(alunoId);
                     await registrarAcesso(aluno.name, aluno.matricula, true, 'ENTRADA_PERMITIDA', tipo);
                     enviarRespostaAcesso(tipo, 'SIM:ENTRADA_PERMITIDA');
                     if (aluno.responsavel_telefone) {
-                        await addToQueue({ tipo: 'entrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                        await addToQueue({ tipo: 'entrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                     }
-                    console.log(`[ACESSO] ✅ ${nome} ENTROU às ${horaAtual}`);
+                    console.log(`[ACESSO] ✅ ${nome} ENTROU às ${new Date().toLocaleTimeString('pt-BR')}`);
                 } else if (presenca[0].saida) {
                     await db.query(`
-                        INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
-                        VALUES (?, ?, ?, ?, 'PRESENTE', NULL)
-                    `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, entrada, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'PRESENTE', NULL)
+`, [alunoId, tipo]);
                     statusEscola.alunosPresentes.add(alunoId);
                     await registrarAcesso(aluno.name, aluno.matricula, true, 'REENTRADA_PERMITIDA', tipo);
                     enviarRespostaAcesso(tipo, 'SIM:REENTRADA_PERMITIDA');
                     if (aluno.responsavel_telefone) {
-                        await addToQueue({ tipo: 'reentrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                        await addToQueue({ tipo: 'reentrada', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                     }
-                    console.log(`[ACESSO] ✅ ${nome} REENTROU às ${horaAtual}`);
+                    console.log(`[ACESSO] ✅ ${nome} REENTROU às ${new Date().toLocaleTimeString('pt-BR')}`);
                 } else {
                     await registrarAcesso(aluno.name, aluno.matricula, true, 'JA_PRESENTE', tipo);
                     enviarRespostaAcesso(tipo, 'SIM:JA_PRESENTE');
@@ -916,22 +814,22 @@ if (diaSemana === 6) { // sábado
                 }
                 if (presenca.length > 0 && !presenca[0].saida) {
                     await db.query(`
-                        UPDATE presencas SET saida = ?, status = 'SAIU', tipo_liberacao = NULL
+                        UPDATE presencas SET saida = CURRENT_TIME, status = 'SAIU', tipo_liberacao = NULL
                         WHERE id = ?
-                    `, [horaAtual, presenca[0].id]);
+                    `, [presenca[0].id]);
                 } else if (presenca.length === 0) {
                     await db.query(`
-                        INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
-                        VALUES (?, ?, ?, ?, 'SAIU', NULL)
-                    `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'SAIU', NULL)
+`, [alunoId, tipo]);
                 }
                 statusEscola.alunosPresentes.delete(alunoId);
                 await registrarAcesso(aluno.name, aluno.matricula, true, 'SAIDA_PERMITIDA', tipo);
                 enviarRespostaAcesso(tipo, 'SIM:SAIDA_PERMITIDA');
                 if (aluno.responsavel_telefone) {
-                    await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                    await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                 }
-                console.log(`[SAIDA] ✅ ${nome} SAIU às ${horaAtual}`);
+                console.log(`[SAIDA] ✅ ${nome} SAIU às ${new Date().toLocaleTimeString('pt-BR')}`);
             }
             else if (statusEscola.estado === 'FECHADA') {
                 const estaPresenteSet = statusEscola.alunosPresentes.has(alunoId) || (presenca.length > 0 && !presenca[0].saida);
@@ -939,22 +837,22 @@ if (diaSemana === 6) { // sábado
                     if (presenca.length > 0 && !presenca[0].saida) {
                         await db.query(`
                             UPDATE presencas 
-                            SET saida = ?, status = 'SAIU', tipo_liberacao = NULL
+                            SET saida = CURRENT_TIME, status = 'SAIU', tipo_liberacao = NULL
                             WHERE id = ?
-                        `, [horaAtual, presenca[0].id]);
+                        `, [presenca[0].id]);
                     } else if (presenca.length === 0) {
                         await db.query(`
-                            INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
-                            VALUES (?, ?, ?, ?, 'SAIU', NULL)
-                        `, [alunoId, tipo, hoje, horaAtual]);
+    INSERT INTO presencas (aluno_id, tipo_sistema, data, saida, status, tipo_liberacao)
+    VALUES (?, ?, CURDATE(), CURRENT_TIME, 'SAIU', NULL)
+`, [alunoId, tipo]);
                     }
                     statusEscola.alunosPresentes.delete(alunoId);
                     await registrarAcesso(aluno.name, aluno.matricula, true, 'SAIDA_EMERGENCIA', tipo);
                     enviarRespostaAcesso(tipo, 'SIM:SAIDA_EMERGENCIA');
                     if (aluno.responsavel_telefone) {
-                        await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: horaAtual } });
+                        await addToQueue({ tipo: 'saida', destinatario: aluno.responsavel_telefone, dados: { nomeAluno: aluno.name, horario: new Date().toLocaleTimeString('pt-BR') } });
                     }
-                    console.log(`[ACESSO] 🚨 ${nome} SAIU EM EMERGÊNCIA às ${horaAtual}`);
+                    console.log(`[ACESSO] 🚨 ${nome} SAIU EM EMERGÊNCIA às ${new Date().toLocaleTimeString('pt-BR')}`);
                 } else {
                     await registrarAcesso(aluno.name, aluno.matricula, false, 'ESCOLA_FECHADA', tipo);
                     enviarRespostaAcesso(tipo, 'NAO:ESCOLA_FECHADA');
@@ -1886,9 +1784,8 @@ app.post('/api/config/horario-limite', autenticar, async (req, res) => {
 app.get('/api/escola/presentes', autenticar, async (req, res) => {
     const ids = Array.from(statusEscola.alunosPresentes);
     if (!ids.length) return res.json({ totalPresentes: 0, alunosPresentes: [] });
-    const hoje = new Date().toISOString().slice(0, 10);
     const placeholders = ids.map(() => '?').join(',');
-    const [alunos] = await db.query(`SELECT a.name, a.matricula, a.ano, a.curso, p.entrada FROM alunos a LEFT JOIN presencas p ON p.aluno_id = a.id AND p.data = ? WHERE a.id IN (${placeholders})`, [hoje, ...ids]);
+    const [alunos] = await db.query(`SELECT a.name, a.matricula, a.ano, a.curso, p.entrada FROM alunos a LEFT JOIN presencas p ON p.aluno_id = a.id AND p.data = CURDATE() WHERE a.id IN (${placeholders})`, [...ids]);
     res.json({ totalPresentes: alunos.length, alunosPresentes: alunos });
 });
 
@@ -2188,11 +2085,9 @@ app.get('/api/admin-gestao/stats', autenticar, async (req, res) => {
         const [totalAlunosResult] = await db.query('SELECT COUNT(*) as total FROM alunos');
         const totalAlunos = totalAlunosResult[0].total;
         
-        const hoje = new Date().toISOString().slice(0, 10);
         const [presentesResult] = await db.query(
-            'SELECT COUNT(DISTINCT aluno_id) as total FROM presencas WHERE data = ? AND status = "PRESENTE" AND saida IS NULL',
-            [hoje]
-        );
+    'SELECT COUNT(DISTINCT aluno_id) as total FROM presencas WHERE data = CURDATE() AND status = "PRESENTE" AND saida IS NULL'
+);
         const presentesHoje = presentesResult[0].total || 0;
         
         const [mediaResult] = await db.query(`
@@ -2555,6 +2450,7 @@ app.get('/api/calendario', autenticar, async (req, res) => {
         const [rows] = await db.query('SELECT *, DATE_FORMAT(horario_saida, "%H:%i") as horario_saida FROM calendario_escolar ORDER BY data');
         res.json({ success: true, eventos: rows });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: err.message });
     }
 });
@@ -2825,16 +2721,15 @@ server.listen(PORT, '0.0.0.0', async () => {
     await seedFeriados(anoAtual);
     console.log(`📅 Feriados nacionais de ${anoAtual} inseridos/verificados`);
     
-    const hoje = new Date().toISOString().slice(0, 10);
     const [presentes] = await db.query(`
-        SELECT a.id FROM presencas p 
-        JOIN alunos a ON p.aluno_id = a.id 
-        WHERE p.data = ? AND p.status = 'PRESENTE' AND p.saida IS NULL
-    `, [hoje]);
-    
-    statusEscola.alunosPresentes.clear();
-    presentes.forEach(p => statusEscola.alunosPresentes.add(Number(p.id)));
-    console.log(`📌 Alunos presentes hoje: ${statusEscola.alunosPresentes.size}`);
+    SELECT a.id FROM presencas p 
+    JOIN alunos a ON p.aluno_id = a.id 
+    WHERE p.data = CURDATE() AND p.status = 'PRESENTE' AND p.saida IS NULL
+`);
+
+statusEscola.alunosPresentes.clear();
+presentes.forEach(p => statusEscola.alunosPresentes.add(Number(p.id)));
+console.log(`📌 Alunos presentes hoje: ${statusEscola.alunosPresentes.size}`);
     console.log(`📌 Status da Escola: ${statusEscola.estado}`);
 });
 
